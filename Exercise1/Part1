@@ -1,0 +1,38 @@
+------------------------------------------------------------------------------
+--                                                                          --
+--  CS311 Programming Languages Definition & Implementation                 --
+--                                                                          --
+--  Exercise 1 Part 1 (an IMP program)                                      --
+--                                                                          --
+------------------------------------------------------------------------------
+
+-- Please modify this file to add your group's solutions to the problems.
+-- To assist with our partially automated assessment processes, please do
+-- not change text on lines beginning with --, and provide answers in the
+-- zones tagged with -- ???
+
+
+-- The grammar for IMP can be found in the file
+--   Exercise1/References/IMPgrammar
+
+------------------------------------------------------------------------------
+-- Question 1.1.1
+--
+-- Edit the text below by inserting or removing whitespace or symbols, but
+-- preserving all the alphanumeric characters. Ensure that the result is a
+-- valid IMP <program>.
+
+-- ??? 1.1.1
+
+integer triangle n :=
+  new i = n in new t = 0 indo
+    { while i > 0
+        { t := t + i,
+          i := i - 1
+        }
+    return t
+
+triangle 4 + triangle 5
+
+------------------------------------------------------------------------------
+

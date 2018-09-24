@@ -1,0 +1,66 @@
+<program>
+  ::= <iexp>
+    | <definition>; <program>
+
+<definition>
+  ::= integer <var>(<parameters>) = <iexp>
+    | command <var>(<parameters>) = <command>
+
+<parameters>
+  ::=
+    | <paramscomma> <var>
+
+<paramscomma>
+  ::=
+    | <paramscomma> <var>,
+
+<arguments>
+  ::=
+    | <iexp> <commaargs>
+
+<commaargs>
+  ::=
+    | , <iexp> <commaargs>
+
+<iexp>
+  ::= <number>
+    | <var>
+    | <iexp> <iop> <iexp>
+    | new <var> := <iexp> in <iexp>
+    | do <command> return <iexp>
+    | <var>(<arguments>)
+
+<iop>
+  ::= +
+    | -
+
+<command>
+  ::= {<block>}
+    | <var> := <iexp>
+    | if (<bexp>) <command> else <command>
+    | while (<bexp>) <command>
+    | new <var> := <iexp> in <command>
+    | <var>(<arguments>)
+
+<block>
+  ::=
+    | <command>; <block>
+
+<bexp>
+  ::= <bit>
+    | <bexp> & <bexp>
+    | <bexp> \| <bexp>
+    | ! <bexp>
+    | <iexp> <comparator> <iexp>
+
+<bit>
+  ::= 0
+    | 1
+
+<comparator>
+  ::= ==
+    | !=
+    | <
+    | >
+    | <=
+    | >=
