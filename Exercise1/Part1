@@ -64,7 +64,42 @@ integer triangle n :=
 ------------------------------------------------------------------------------
 -- Question 1.4
 --
+-- Consider the grammar LAM. A lambda term is a redex if it is of the form 
+-- (\\ x -> t) s 
+-- 
+-- A lambda term is a normal form if it is not a redex and none of its subterms 
+-- are redexes. This is a very important definition as we will see later in the 
+-- course. However, this defnition is not a grammar for defining normal forms
+-- via production rules.
 --
+-- Define a grammar for normal forms. As a hint, you will need to simultaneously 
+-- define a grammar for what are called neutral terms, ie those normal forms 
+-- which, in addition, are not of the form \\ x -> t
+--
+--
+--
+--
+----------------------------------------------------------------
+-- Question 1.5
+--
+-- Consider the production rules
+
+<x> := a <y> b
+     | c 
+     | b <x> a 
+
+<y> := c <x> c
+     | a
+
+-- Write down all valid expressions for the non-terminal <x> of length 6 or less 
+
+
+
+
+
+
+
+
 
 
 
