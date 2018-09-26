@@ -41,7 +41,8 @@ integer triangle n :=
 -- Consider the following string 
 -- f \x -> s t
 --
--- By only inserting parenthesis, write as many valid LAM expressions
+-- By only inserting parenthesis, write as many valid LAM expressions as 
+-- possible
 
 -- ?? 1.2
 
