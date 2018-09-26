@@ -1,0 +1,244 @@
+\documentclass{article}
+\usepackage{a4wide}
+\usepackage{alltt}
+\usepackage{pig}
+
+\begin{document}
+\title{IMP --- Big Step Dynamic Semantics}
+\author{Neil Ghani and Conor McBride}
+\maketitle
+
+\newcommand{\newe}[3]{\mathtt{new}\;#1\;\mathtt{:=}\;#2\;\mathtt{in}\;#3}
+\newcommand{\newc}[3]{\mathtt{new}\;#1\;\mathtt{:=}\;#2\;\mathtt{in}\;#3}
+\newcommand{\doe}[2]{\mathtt{do}\;#1\;\mathtt{return}\;#2}
+\newcommand{\doret}[2]{\mathtt{do}\;#1\;\mathtt{return}\;#2}
+\newcommand{\ifel}[3]{\mathtt{if}\;\mathtt{(}#1\mathtt{)}\;#2\;\mathtt{else}\;#3}
+\newcommand{\whi}[2]{\mathtt{while}\; \mathtt{(}#1\mathtt{)} \;#2}
+\newcommand{\ang}[1]{\langle #1 \rangle}
+\newcommand{\NT}[1]{\ang{\mathit{#1}}}
+\newcommand{\wk}[2]{#1 \backslash #2}
+
+\section{Syntax}
+
+We concern ourselves with the fragment of IMP given by the grammar:
+
+\begin{verbatim}
+<iexp>
+  ::= <number>
+    | <var>
+    | <iexp> <iop> <iexp>
+    | new <var> := <iexp> in <iexp>
+    | do <command> return <iexp>
+
+<iop> ::= + | -
+
+<command>
+  ::= {<block>}
+    | <var> := <iexp>
+    | if (<bexp>) <command> else <command>
+    | while (<bexp>) <command>
+    | new <var> := <iexp> in <command>
+
+<block>
+  ::=
+    | <command>; <block>
+
+<bexp>
+  ::= <bit>
+    | <bexp> & <bexp>
+    | <bexp> \| <bexp>
+    | ! <bexp>
+    | <iexp> <comparator> <iexp>
+
+<bit> ::= 0 | 1
+
+<comparator> ::= == | != | < | > | <= | >=
+\end{verbatim}
+
+That is, we have removed (for now) the apparatus for defining and invoking new functions and commands.
+
+
+\section{Program Variables versus Metavariables, Metapatterns}
+
+Specific, programs may contain variables, which refer to memory allocated for the storage of values.
+
+When we talk about programs in general, we give names to their parts. Those names are not program variables, but rather part of our language for talking about programs, so we try to be careful to call them \emph{meta}variables. E.g., we might talk about the
+\[
+  \newe{x}{e_0}{e_1}
+\]
+construct. Here, the metavariables $e_0$ and $e_1$ stand for arbitrary integer expressions, and (perhaps confusingly), the metavariable $x$ stands for an arbitrary program variable, like $\mathtt{fred}$ or $\mathtt{x27}$.
+
+It is common practice to adopt metavariable naming conventions to allow you to guess more easily what a metavariable stands for, given what it is called. It is good to be explicit about these conventions. E.g., we shall typically use $e$ to stand for integer expressions and $x$, $y$, $z$ to stand for program variables.
+
+We call $\newe{x}{e_0}{e_1}$ a \emph{metapattern}, because it stands for a whole class of expressions --- those whose top-level construct is $\mathtt{new}\ldots$, with metavariables naming the parts so that we can talk about them later.
+
+
+\section{Stores, Scope and Shadowing}
+
+Let us focus on program variables. These are labels for mutable storage of integers. Correspondingly, when a variable is used as an integer expression, it stands for the integer value stored, and when a variable stands on the left of an assignment command, the stored value is to be replaced. Neither makes sense if the variable is not in \emph{scope}. Programs should make use of only those variables which are locally known to refer to stored values: to be `in scope' is to be such a variable.
+
+How do variables come into scope? In the above fragment, that is the role of the $\newe{x}{e_0}{e_1}$ construct. The expression $e_0$ is to be computed in the current scope (which may or may not involve a variable called $x$); its value $v_0$ is used to initialise a new local variable $x$ which is in scope for the evaluation of $e_1$; when $e_1$ has been evaluated, the original scope is restored. So
+
+\begin{verbatim}
+new x := 6 in do x := x + 1 return x
+\end{verbatim}
+
+yields the value 7. Crucially, $\newe{x}{e_0}{e_1}$ does not corrupt any existing memory labelled with the name $x$. Rather, such memory becomes inaccessible to $e_1$, because, there and only there, variable $x$ refers to the newly introduced local store. That is
+
+\begin{verbatim}
+new x := 37 in (new x := 42 in do x := x + 1 return x) + x
+\end{verbatim}
+
+yields 80, because the two $\mathtt{new\;x}$ constructs introduce distinct local store. It is the inner $\mathtt{x}$, initialised to 42, which is in scope for the $\doret{\ldots}{\ldots}$, and so incremented to 43 and returned. The $\mathtt{x}$ to the right of $+$ refers is the outer one, initialised to 37 and unchanged throughout.
+
+We shall need to account for stores scope and shadowing in any explanation of how IMP programs run. A store is a finite sequence (order matters) of assignments of integer values to variables. The same variable may appear more than once.
+
+\[\begin{array}{rrl}
+    \NT{store} & ::= & \\
+               &   | & \NT{store}, \NT{var} := \NT{integer}
+\end{array}\]
+
+We may use $\sigma$ as a metavariable to stand for stores as we develop our semantics.
+
+We shall need to write metapatterns which characterise (or `match') stores with particular properties, containing metavariables which stand for parts of those stores. We write $\psi$ to stand for store metapatterns (which makes it a metametavariable!).
+\begin{itemize}
+\item a metavariable $\sigma$ is a metapattern which matches any contiguous part of a store (including, perhaps, a whole store)
+\item $x := v$ matches the (part of a) store which assigns value $v$ to the variable that $x$ stands for
+\item if $\psi_0$ and $\psi_1$ are store metapatterns, then $\psi_0,\psi_1$ is also a metapattern, matching any store which can be split at some point into a left part matching $\psi_0$ and a right part matching $\psi_1$
+\item metapattern $\wk x\psi$ matches any part of a store which matches $\psi$ and does \emph{not} contain an assignment for $x$
+\end{itemize}
+
+Examples:
+\begin{itemize}
+\item $\sigma$ matches any store
+\item $x := v$ matches the store which consists exactly of the assignment of $v$ to $x$
+\item $\sigma, x := v$ matches the store whose rightmost assignment is of $v$ to $x$, with $\sigma$ being everything to the left of that assignment
+\item $\sigma_0, x := v, \wk x{\sigma_1}$ matches any store which contains at least one assignment to $x$, with $v$ being the rightmost value assigned to $x$, because the $x^\ast\sigma_1$ matches only stores $\sigma_1$ which do not contain $x$; to the left, we have $\sigma_0$, which may contain zero or more other assignments to $x$
+\end{itemize}
+By convention, scopes are ordered by \emph{locality}, with more local things to the right of less local things.
+The last example, in particular, allows us to pick out the \emph{most local} $x$ which is the $x$ that is in scope. The $x$s in $\sigma_0$ are \emph{shadowed}.
+
+\section{Judgements and Rules}
+
+\newcommand{\evalJ}[4]{#1 \,|\, #2 \Downarrow #3 \,|\, #4}
+
+We make logical statements about parts of programs which we call \emph{judgments}. Judgements are not just any old nonsense: they come in particular shapes called \emph{judgement forms}. The job of a judgement form is to characterise an aspect of what there is to know. Judgement forms can be given a grammar. E.g.,
+\[
+\NT{judgement} ::= \evalJ{\NT{store}}{\NT{iexp}}{\NT{store}}{\NT{integer}}
+\]
+
+We often state informally what is the intuition for a given judgment form --- what it tells us. E.g.,
+\[
+  \evalJ{\sigma_0}e{\sigma_1}v
+\]
+means `starting with store $\sigma_0$, expression $e$ evaluates yielding final store $\sigma_1$ and integer value $v$' (where $u$, $v$ are metavariables standing for integer values).
+
+We then write \emph{rules} which tell us how to \emph{derive} (i.e., prove) that judgements hold. Rules are often presented in `natural deduction' form:
+\[
+  \Rule{J_1\quad\ldots\quad J_n}
+       {J}
+  \]
+  means `to show judgement $J$, you must in turn show each of tyhe judgments $J_1, \ldots, J_n$'. We say $J$ is the \emph{conclusion} of the rule and the $J_i$ are its \emph{premises}. Whatever else anybody may have told you, we always work \emph{backwards} from a judgment we want to establish to find a \emph{derivation} which establishes it. We can stop when we reach a rule with zero premises: such a rule is called an \emph{axiom}. E.g.
+  \[
+    \Axiom{\evalJ\sigma v\Sigma v}
+  \]
+is an axiom stating that an expression which takes the form of an integer value evaluates to that very value, without changing the state.
+
+We should add that the positions for things in judgements have \emph{modes}: they are either \emph{inputs} or \emph{outputs}. In our example judgement form, the modes are
+\[\begin{array}{ccccccc}
+    \mbox{input} &&  \mbox{input} && \mbox{output} &&  \mbox{output} \\
+    \sigma_0 & | & e & \Downarrow & \sigma_1 & | & v
+\end{array}\]
+We tend to keep inputs to the left and outputs to the right.
+
+Modes help us to read and understand rules.
+\begin{itemize}
+\item The inputs of a rule's conclusion are metapatterns (naming the parts of the inputs with metavariables);
+\item the inputs of a rule's premises are metaexpressions (which make use of known metavariables but do not introduce new metavariables);
+\item the outputs of a rule's premises are metapatterns (which extract useful information from the premises);
+\item the outputs of a rule's conclusion are metaexpression (which may use all the metavariables in the rule).
+\end{itemize}
+That is, we read rules \emph{clockwise}, from the inputs of the conclusion, up and through the premises left-to-right, then down to the conclusion's outputs.
+Think of a rule as a server for its conclusion (you ask it to establish a fact) and a client for its premises (it needs to establish that the right conditions hold, in order to serve you your fact). The modes explain the communication in that process. E.g.,
+\[
+  \Rule{\evalJ{\sigma_0}{e_0}{\sigma_1}{v_0}\quad \evalJ{\sigma_1}{e_1}{\sigma_2}{v_1}}
+       {\evalJ{\sigma_0}{e_0 \mathtt{+} e_1}{\sigma_2}{v_0 + v_1}}
+  \]
+tells us how to evaluate addition expressions. The conclusion's input patterns tell us the starting store $\sigma_0$ and the two subexpressions $e_0$ and $e_1$;
+the first premise uses $\sigma_0$ and $e_0$ for its inputs, and we learn from its outputs $\sigma_1$ (the store after evaluating $e_0$) and $v_0$ (the value of $e_0$);
+the second premise uses $\sigma_1$ as the starting store for $e_1$, giving us a resulting store $\sigma_2$ and the value $v_1$ of $e_1$; the conclusion's outputs then say that the final store is $\sigma_2$ and the value of the whole expression is $v_0 + v_1$. Note that the $\mathtt{+}$ in the input is \emph{syntax} (the operator in the language grammar), while the $+$ in the outputs is actual addition of integers.
+
+
+\section{Big-step Operational Semantics for IMP}
+
+
+\newcommand{\execJ}[3]{#1 \,|\, #2 \Downarrow #3}
+\newcommand{\cs}{\mathit{cs}}
+\newcommand{\fbx}[1]{\framebox{\ensuremath{#1}}}
+
+Let's put all these pieces together and give a `big-step' operational semantics for IMP. It's a \emph{semantics} because it says what programs mean. It's \emph{operational} because it characterises meaning by saying what things do. It's \emph{big-step} because judgments characterise complete behaviour in one go.
+
+\paragraph{Metavariable conventions}~ Let us write
+\[\begin{array}{rcl@{\qquad}|@{\qquad}rcl}
+    e & \mbox{for an} & \NT{iexp} & v & \mbox{for an} & \NT{integer} \\
+    p & \mbox{for a} & \NT{bexp} & b & \mbox{for a} & \NT{bit} \\
+    c & \mbox{for a} & \NT{command} & & & \\
+    \cs & \mbox{for a} & \NT{block} & & & \\
+    \sigma & \mbox{for a} & \NT{store} &&&\\
+\end{array}\]
+where $\NT{integer}$ characterises not only the $\NT{number}$s, but also the negative values.
+
+\paragraph{Judgement forms}~
+\begin{itemize}
+\item $\evalJ{\sigma_0}{e}{\sigma_1}{v}$\\
+  starting with store $\sigma_0$, integer expression $e$ evaluates yielding final store $\sigma_1$ and integer value $v$
+\item $\evalJ{\sigma_0}{p}{\sigma_1}{b}$\\
+  starting with store $\sigma_0$, boolean expression $p$ evaluates yielding final store $\sigma_1$ and bit value $b$
+\item $\execJ{\sigma_0}{c}{\sigma_1}$\\
+  starting with store $\sigma_0$, executing command $c$ terminates, yielding final store $\sigma_1$ 
+\item $\execJ{\sigma_0}{\cs}{\sigma_1}$\\
+  starting with store $\sigma_0$, executing block $\cs$ terminates, yielding final store $\sigma_1$ 
+\end{itemize}
+
+We may now write the rules for each judgement form. It is traditional to write the judgement form in a box at the top of the table of the rules which use that judgement form in its conclusion.
+
+\[\begin{array}{c}
+    \fbx{\evalJ{\sigma_0}{e}{\sigma_1}{v}} \medskip \\
+    \Axiom{\evalJ\sigma v\sigma v} \\
+    \Axiom{\evalJ{\sigma,x:=v,\wk{x}{\sigma'}}x{\sigma,x:=v,\sigma'}{v}}\\
+    \Rule{\evalJ{\sigma_0}{e_0}{\sigma_1}{v_0}\quad \evalJ{\sigma_1}{e_1}{\sigma_2}{v_1}}
+      {\evalJ{\sigma_0}{e_0 \mathtt{+} e_1}{\sigma_2}{v_0 + v_1}}\\
+    \Rule{\evalJ{\sigma_0}{e_0}{\sigma_1}{v_0}\quad \evalJ{\sigma_1}{e_1}{\sigma_2}{v_1}}
+      {\evalJ{\sigma_0}{e_0 \mathtt{-} e_1}{\sigma_2}{v_0 - v_1}}\\
+    \Rule{\evalJ{\sigma_0}{e_0}{\sigma_1}{v_0} \quad \evalJ{\sigma_1,x:=v}{e_1}{\sigma_2,x:=v_2}{v_1}}
+         {\evalJ{\sigma_0}{\newe x{e_0}{e_1}}{\sigma_2}{v_1}}\\
+    \Rule{\execJ{\sigma_0}{c}{\sigma_1} \quad \evalJ{\sigma_1}{e}{\sigma_2}{v}}
+         {\evalJ{\sigma_0}{\doe ce}{\sigma_2}{v}}\\
+\end{array}\]
+
+Note how the rule for variables carefully chooses the most local occurrence of the variable in the store and gives back the same store.
+Note how the rule for $\mathtt{new}$ introduces a fresh local part of the store for its second premise: this local store is discarded when
+producing the final store in the conclusion.
+
+Let us have commands and blocks, next.
+\[\begin{array}[t]{c@{\qquad\qquad}c}
+    \fbx{\execJ{\sigma_0}{c}{\sigma_1}} & \fbx{\execJ{\sigma_0}{\cs}{\sigma_1}} \medskip \\
+    \Rule{\execJ{\sigma_0}{\cs}{\sigma_1}}
+      {\execJ{\sigma_0}{\{\cs\}}{\sigma_1}} & \Axiom{\execJ{\sigma}{}{\sigma}}  \\
+    \Rule{\evalJ{\sigma_0}{e}{\sigma_1,x:=v_1,\wk{x}{\sigma'_1}}{v}}
+    {\execJ{\sigma_0}{x:=e}{\sigma_1,x:=v,\sigma'_1}} &
+       \Rule{\execJ{\sigma_0}{c}{\sigma_1} \quad \execJ{\sigma_1}{\cs}{\sigma_2}}
+          {\execJ{\sigma_0}{c\mathtt{;}\;\cs}{\sigma_2}} \\
+    \Rule{\evalJ{\sigma_0}p{\sigma_1}0 \quad \execJ{\sigma_1}{c_0}{\sigma_2}}
+      {\execJ{\sigma_0}{\ifel p{c_1}{c_0}}{\sigma_2}} \\
+    \Rule{\evalJ{\sigma_0}p{\sigma_1}1 \quad \execJ{\sigma_1}{c_1}{\sigma_2}}
+         {\execJ{\sigma_0}{\ifel p{c_1}{c_0}}{\sigma_2}} \\
+    \Rule{\evalJ{\sigma_0}p{\sigma_1}0}
+         {\execJ{\sigma_0}{\whi pc}{\sigma_1}} \\
+    \Rule{\evalJ{\sigma_0}p{\sigma_1}1\quad \execJ{\sigma_1}c{\sigma_2}\quad\execJ{\sigma_2}{\whi pc}{\sigma_3}}
+    {\execJ{\sigma_0}{\whi pc}{\sigma_3}} \\
+        \Rule{\evalJ{\sigma_0}{e}{\sigma_1}{v} \quad \execJ{\sigma_1,x:=v}{c}{\sigma_2,x:=v_2}}
+         {\execJ{\sigma_0}{\newc xec}{\sigma_2}}\\
+  \end{array}  \]
+
+\end{document}
