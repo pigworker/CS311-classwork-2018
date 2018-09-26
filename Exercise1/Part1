@@ -37,7 +37,7 @@ integer triangle n :=
 -- Question 1.2
 --
 -- Consider the following string 
--- f \\x -> s t
+-- f \x -> s t
 --
 -- By only inserting parenthesis, write as many valid LAM expressions
 
@@ -65,7 +65,7 @@ integer triangle n :=
 -- Question 1.4
 --
 -- Consider the grammar LAM. A lambda term is a redex if it is of the form 
--- (\\ x -> t) s 
+-- (\ x -> t) s 
 -- 
 -- A lambda term is a normal form if it is not a redex and none of its subterms 
 -- are redexes. This is a very important definition as we will see later in the 
@@ -106,5 +106,4 @@ integer triangle n :=
 
 
 
-hello
 
