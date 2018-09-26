@@ -25,6 +25,8 @@
 -- preserving all the alphanumeric characters. Ensure that the result is a
 -- valid IMP <program>.
 
+-- ???
+
 integer triangle n :=
   new i = n in new t = 0 indo
     { while i > 0
@@ -41,6 +43,10 @@ integer triangle n :=
 --
 -- By only inserting parenthesis, write as many valid LAM expressions
 
+-- ???
+
+
+
 
 ------------------------------------------------------------------------------
 -- Question 1.3.1
@@ -51,6 +57,13 @@ integer triangle n :=
 -- and implies
 --
 --
+-- ???
+
+
+
+
+
+
 ------------------------------------------------------------------------------
 -- Question 1.3.2
 --
@@ -59,7 +72,9 @@ integer triangle n :=
 --
 --
 --
---
+-- ???
+
+
 
 ------------------------------------------------------------------------------
 -- Question 1.4
@@ -77,6 +92,7 @@ integer triangle n :=
 -- which, in addition, are not of the form \\ x -> t
 --
 --
+-- ???
 --
 --
 ----------------------------------------------------------------
@@ -93,7 +109,7 @@ integer triangle n :=
 
 -- Write down all valid expressions for the non-terminal <x> of length 6 or less 
 
-
+-- ???
 
 
 
