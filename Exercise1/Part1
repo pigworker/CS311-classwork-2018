@@ -19,13 +19,13 @@
 --   Exercise1/References/LAMgrammar
 
 ------------------------------------------------------------------------------
--- Question 1.1.1
+-- Question 1.1
 --
 -- Edit the text below by inserting or removing whitespace or symbols, but
 -- preserving all the alphanumeric characters. Ensure that the result is a
 -- valid IMP <program>.
 
--- ???
+-- ?? 1.1
 
 integer triangle n :=
   new i = n in new t = 0 indo
@@ -43,7 +43,7 @@ integer triangle n :=
 --
 -- By only inserting parenthesis, write as many valid LAM expressions
 
--- ???
+-- ?? 1.2
 
 
 
@@ -57,7 +57,7 @@ integer triangle n :=
 -- and implies
 --
 --
--- ???
+-- ?? 1.3.1
 
 
 
@@ -72,7 +72,7 @@ integer triangle n :=
 --
 --
 --
--- ???
+-- ?? 1.3.2
 
 
 
@@ -92,9 +92,12 @@ integer triangle n :=
 -- which, in addition, are not of the form \\ x -> t
 --
 --
--- ???
---
---
+-- ?? 1.4
+
+
+
+
+
 ----------------------------------------------------------------
 -- Question 1.5
 --
@@ -109,7 +112,7 @@ integer triangle n :=
 
 -- Write down all valid expressions for the non-terminal <x> of length 6 or less 
 
--- ???
+-- ?? 1.5
 
 
 
