@@ -26,4 +26,5 @@ Instead, copy the project's url (the ssh one) to the clipboard and, from a termi
 
 6. *Everybody*, get cracking!
 
+7. *Everybody*, to receive updates, you will need to issue the command (from a terminal, in the repo directory) `git add remote central https://github.com/pigworker/CS311-classwork-2018.git`. When you've done that, try `git pull central` to get the latest version of stuff from us.
 
