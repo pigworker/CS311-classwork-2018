@@ -1,0 +1,6 @@
+<term>
+  ::= <var>
+    | <term> <term>
+    | \ <var> -> <term>
+    | <number>
+    | (<term> + <term>)
