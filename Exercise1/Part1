@@ -32,6 +32,7 @@ integer triangle n :=
           i := i - 1
         }
     return t
+triangle 4 + triangle 5
 
 ------------------------------------------------------------------------------
 -- Question 1.2
