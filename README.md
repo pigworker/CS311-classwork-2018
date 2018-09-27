@@ -15,7 +15,7 @@ Your group (named after a chemical element) needs a version of this repository w
 
 2. *Everybody*, make sure you can connect with GitLab using ssh. You may need to create an ssh key, using ssh-keygen. If the command `ls ~/.ssh` draws a blank, run `ssh-keygen` and try again. Once you have a file called `~/.ssh/id_rsa.pub`, navigate on your browser to your gitlab settings page (via menu top-right), then to the SSH keys page (icon of a key in the left sidebar) and paste in the contents of `~/.ssh/id_rsa.pub` to establish your credentials.
 
-3. *One person per group*, make a local copy of this repository by the command `https://github.com/pigworker/CS311-classwork-2018.git`.
+3. *One person per group*, make a local copy of this repository by the command `git clone https://github.com/pigworker/CS311-classwork-2018.git`.
 
 4. *Same person per group*, create a new project on GitLab with the name CS311-2018-<chemical-element> (i.e., your group's name). Do not initialise it with any content via the website.
 Instead, copy the project's url (the ssh one) to the clipboard and, from a terminal window with current directory inside your local copy of this repository, issue the command `git remote add group <pasted-url>`. And then `git push -u group master`. That should initialise your group repo from this one.
