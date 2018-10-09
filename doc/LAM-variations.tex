@@ -159,7 +159,94 @@ becomes
 A de Bruijn index is just the thing to tell us \emph{where} in $\gamma$, now an
 \emph{array} of values (with 0 the rightmost index), is the value we want.
 
+Note that in this variation, an application's argument is evaluated agressively, so that its value is ready to go in the environment. That creates an extra risk of failure: an argument which contains some sort of error will cause a problem, even if that argument is never used by the function.
+
 
 \section{Thunks}
+
+Next comes a variation which is less aggressive about evaluating arguments.
+The idea is that instead of evaluating things just before we put them into the environment, we evaluate things just after we take them out.
+
+Our environments will thus contain terms, but that is not enough! In order to evaluate a term properly, we need to remember \emph{its} environment.
+\begin{verbatim}
+<thunkEnv>
+  ::= 
+    | <thunkEnv>, <var> = (<thunkEnv>|<term>)
+
+<thunkVal>
+  ::= [<thunkEnv>] <var> -> <term>
+    | <number>
+\end{verbatim}
+A pair of an environment and an unvaluated term in that environment is called
+a \emph{thunk}. A thunk stores all the information needed to start the evaluation process whenever the value is demanded. We call that \emph{forcing} the thunk.
+
+Let us write $\theta$ for thunk environments. Our values change only in that closures store thunk environments instead of value environments: let us still use $u$ and $v$ for them.
+
+The judgement form is thus
+\[\theta | \lbs tv
+\]
+
+We still have one rule per construct, but the work happens in different places.
+\[\begin{array}{c}
+  \Axiom{\theta | \lbs{\la xt}{[\theta]x \tto t}}
+  \qquad
+  \Axiom{\theta | \lbs nn}
+  \qquad
+    \Rule{\theta | \lbs su}
+         {\theta_0,x=(\theta|s),\theta_1 | \lbs xv}
+    \\
+  \Rule{\theta | \lbs f{[\theta']x \tto t} \quad
+    \theta',x=(\theta|s) | \lbs tv}
+    {\theta | \lbs{f\:s}v}
+    \quad
+    \Rule{\theta | \lbs sm \quad \theta | \lbs tn}
+      {\theta | \lbs{\pl st}{m+n}}
+\end{array}\]
+
+See how work has moved from the application rule to the variable rule? Instead of evaluating the argument, we just thunk it (`thunk' is a verb as well as a noun),
+carefully saving the environment appropriate to it. It is only when the value of a variable is demanded that we look up the thunk and force it, using the saved environment.
+
+
+\section{Laziness}
+
+The trouble with our previous variation is that it repeats the same evaluation process every time the same thunk is forced. That is, if a variable is used more than once, we do the same work more than once. The potential for woeful inefficiency results. There's a trick to get out of that: the first time a thunk is forced, \emph{overwrite} it with the resulting value. That is actually how Haskell works, and it is ironic that such a `pure' language with no assignment works deep down by sneakily mutating a store.
+
+A \emph{thunk store}, $(\sigma,n)$ is an array $\sigma$ of $n$ entries
+which are \emph{either} thunks or values, so that $\sigma.i$ is either a
+thunk or a value if $i < n$. We write $\sigma(i:=v)$ to represent the array
+updated by overwriting the thunk at $i$ with its value.
+The number $n$ thus tells us how to allocate a new thunk in the store. We can now represent thunk environments as mappings $\ldots,x=i,\ldots$ from variables to indices in the thunk store.
+
+Our judgement form is now
+\[\fbx{(\sigma,n),\theta | \lbs tv, (\sigma',n')}
+  \]
+with the evolving thunk store as an extra input and an extra output.
+
+We now have two rules for variables.
+\[
+  \Rule{\sigma.i=(\theta, s)\quad
+        (\sigma,n),\theta \lbs sv, (\sigma', n')}
+      {(\sigma,n),\theta_0,x=i,\theta_1 | \lbs xv, (\sigma'(i=v), n')}
+      \qquad
+  \Rule{\sigma.i=v}
+      {(\sigma,n),\theta_0,x=i,\theta_1 | \lbs xv, (\sigma, n)}
+\]
+The application rule has to allocate a new thunk.
+\[
+\Rule{(\sigma_0,n_0),\theta | \lbs f{[\theta']x \tto t} (\sigma_1,n_1)\quad
+    (\sigma_1(n_1:=(\theta|s)),n_1+1), \theta',x=n' | \lbs tv, (\sigma_2,n_2)}
+    {(\sigma_0,n_0)\theta | \lbs{f\:s}v, (\sigma_2,n_2)}
+\]
+The other rules must take care to thread the mutation of the thunk store,
+but are otherwise the same.
+\[\begin{array}{c}
+  \Axiom{(\sigma,n),\theta \lbs mm, (\sigma,n)}
+  \qquad
+  \Axiom{(\sigma,n),\theta | \lbs{\la xt}{[\theta]x \tto t}, (\sigma,n)}
+  \\
+  \Rule{(\sigma_0,n_0),\theta | \lbs sm, (\sigma_1,n_1) \quad
+        (\sigma_1,n_1),\theta | \lbs tn, (\sigma_2,n_2)}
+       {(\sigma_0,n_0),\theta | \lbs{\pl st}{m+n}, (\sigma_2,n_2)}
+\end{array}  \]
 
 \end{document}
