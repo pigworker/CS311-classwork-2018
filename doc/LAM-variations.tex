@@ -224,8 +224,8 @@ with the evolving thunk store as an extra input and an extra output.
 
 We now have two rules for variables.
 \[
-  \Rule{\sigma.i=(\theta, s)\quad
-        (\sigma,n),\theta \lbs sv, (\sigma', n')}
+  \Rule{\sigma.i=(\theta | s)\quad
+        (\sigma,n),\theta | \lbs sv, (\sigma', n')}
       {(\sigma,n),\theta_0,x=i,\theta_1 | \lbs xv, (\sigma'(i=v), n')}
       \qquad
   \Rule{\sigma.i=v}
@@ -240,7 +240,7 @@ The application rule has to allocate a new thunk.
 The other rules must take care to thread the mutation of the thunk store,
 but are otherwise the same.
 \[\begin{array}{c}
-  \Axiom{(\sigma,n),\theta \lbs mm, (\sigma,n)}
+  \Axiom{(\sigma,n),\theta | \lbs mm, (\sigma,n)}
   \qquad
   \Axiom{(\sigma,n),\theta | \lbs{\la xt}{[\theta]x \tto t}, (\sigma,n)}
   \\
