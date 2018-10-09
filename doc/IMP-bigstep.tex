@@ -201,6 +201,11 @@ where $\NT{integer}$ characterises not only the $\NT{number}$s, but also the neg
   starting with store $\sigma_0$, executing block $\cs$ terminates, yielding final store $\sigma_1$ 
 \end{itemize}
 
+There's a key \emph{invariant} about the store to be preserved by all
+of these judgements: the store `after' will always contain the same
+\emph{variables} in the same order as the store `before', even if
+their \emph{values} have changed.
+
 We may now write the rules for each judgement form. It is traditional to write the judgement form in a box at the top of the table of the rules which use that judgement form in its conclusion.
 
 \[\begin{array}{c}
@@ -219,7 +224,8 @@ We may now write the rules for each judgement form. It is traditional to write t
 
 Note how the rule for variables carefully chooses the most local occurrence of the variable in the store and gives back the same store.
 Note how the rule for $\mathtt{new}$ introduces a fresh local part of the store for its second premise: this local store is discarded when
-producing the final store in the conclusion.
+producing the final store in the conclusion, ensuring that the
+invariant is respected.
 
 Let us have commands and blocks, next.
 \[\begin{array}[t]{c@{\qquad\qquad}c}

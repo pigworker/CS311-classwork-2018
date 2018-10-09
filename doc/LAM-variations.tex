@@ -1,0 +1,165 @@
+\documentclass{article}
+\usepackage{a4wide}
+\usepackage{alltt}
+\usepackage{amsmath}
+\usepackage{stmaryrd}
+\usepackage{latexsym}
+\usepackage{pig}
+
+\newcommand{\fbx}[1]{\framebox{\ensuremath{#1}}}
+\newcommand{\la}[2]{\backslash\;#1\;\texttt{->}\;#2}
+\newcommand{\pl}[2]{\texttt{(}#1\;\texttt{+}\;#2\texttt{)}}
+
+\begin{document}
+\title{LAM --- Semantic Variations}
+\author{Neil Ghani and Conor McBride}
+\maketitle
+
+Our grammar of $\lambda$-terms is given by
+\begin{verbatim}
+<term>
+  ::= <var>
+    | <term> <term>
+    | \ <var> -> <term>
+    | <number>
+    | (<term> + <term>)
+\end{verbatim}
+If we were real purists, we would omit numbers and addition:
+we include them to represent `ordinary' computation, where
+the job of the $\lambda$-terms is to route data to whichever
+computation is appropriate.
+
+
+\section{Small Step Reduction}
+
+We write $f$, $s$ and $t$ for terms, and $m$ and $n$ for numerical constants.
+Our judgement form is
+\[
+  \fbx{s\leadsto t}
+\]
+with $s$ as an input and $t$ as an output.
+
+The key axioms which do the work are $\beta$-reduction and numerical addition.
+\[
+  \Axiom{(\la x{t[x]})\;s \leadsto t[s]}
+  \qquad
+  \Axiom{\pl mn \leadsto m+n}
+\]
+They are not, however, enough: before you make a reduction step, you have to find a redex! We add \emph{contextual closure} rules:
+\[\begin{array}{c}
+  \Rule{f\leadsto f'}
+  {f\;s \leadsto f'\:s}
+  \qquad
+  \Rule{s\leadsto s'}
+  {f\;s \leadsto f\:s'}
+  \\
+  \Rule{t[x]\leadsto t'[x]}
+  {\la x{t[x]} \leadsto \la x{t'[x]}}
+  \\
+  \Rule{s \leadsto s'}
+  {\pl st \leadsto \pl{s'}t}
+  \qquad
+  \Rule{t \leadsto t'}
+  {\pl st \leadsto \pl s{t'}}
+\end{array}\]
+The contextual closure rules are very far from arbitrary: they are generated from the grammar, with one rule for every way to put a subterm inside a term. Their impact is to allow $\beta$-reduction and numerical addition \emph{anywhere} inside a term. These rules are highly nondeterministic: when there are multiple redexes, they do not tell you which one to choose.
+
+
+\section{Big Step Reduction}
+
+Here is one way to give a big step semantics for LAM. Before we can write the rules, we need to say `what success looks like': to what \emph{values} are we
+trying to compute the terms?
+
+In our language of functions and numbers, let us say that a function is a value if it is ready to be applied, and a number is a value if it is ready to be added.
+\begin{verbatim}
+<value>
+  ::= \ <var> -> <term>
+    | <number>
+\end{verbatim}
+Note that for functions we make no demands on the body of the abstraction.
+Let us write $u$ and $v$ for values. Our judgement form is
+\newcommand{\lbs}[2]{#1\,\Downarrow\,#2}
+\[\fbx{\lbs tv}
+\]
+with $t$ as input and $v$ as output.
+We have only four rules. Two tell us how to stop
+\[
+  \Axiom{\lbs{\la x{t[x]}}{\la x{t[x]}}}
+  \qquad
+  \Axiom{\lbs nn}
+\]
+and two tell us how to go.
+\[
+  \Rule{\lbs{f}{\la x{t[x]}}\quad \lbs{t[s]}v}
+  {\lbs{f\:s}v}
+  \qquad
+  \Rule{\lbs sm\quad \lbs tn}
+  {\lbs{\pl s t}{m+n}}
+\]
+There are several things to notice about this semantics:
+\begin{itemize}
+\item It does not give \emph{every} term a value. (Think about which terms do not get a value, and why. There are several kinds of `bad'.)
+\item It has a deterministic evaluation strategy.
+\item It never computes inside the body of an abstraction: rather, it leaves the body untouched until the function's argument turns up.
+\item It is still reliant on substitution.
+\item A function's arguments are not evaluated until after substitution: this is a win if the bound variable is unused, but unfortunate if it is used a lot.
+\end{itemize}
+
+
+\section{Closures and Environments}
+
+There is no particularly good reason why values should be a subset of terms.
+They could be something apart. Here is a way to represent function values more efficiently, getting rid of substitution.
+\begin{verbatim}
+<val>
+  ::= [<env>] <var> -> <term>
+    | <number>
+
+<env>
+  ::=
+    | <env>, <var> = <val>
+\end{verbatim}
+Our function values are now given as structures called \emph{closures} which pack up an \emph{environment} along with an abstraction. An environment is a mapping of variables to values. A closure captures the situation where we are not quite ready to evaluate the body of an abstraction: we know the values of all the \emph{free} variables, but not the value of the bound variable.
+
+We write $u$ and $v$ for `vals' and $\gamma$ for environments. Our judgement form now takes an environment, to explain what the free variables mean.
+\[
+  \fbx{\gamma | \lbs tv}
+\]
+We expect every free variable to have an entry in the environment. We make the further assumption that all the free variables have different names: this is achievable by $\alpha$-conversion (but there is a better way).
+
+\newcommand{\tto}{\,\texttt{->}\:}
+We have one rule per construct.
+\[\begin{array}{c}
+  \Axiom{\gamma | \lbs{\la xt}{[\gamma]x \tto t}}
+  \qquad
+  \Axiom{\gamma | \lbs nn}
+  \qquad
+  \Axiom{\gamma,x=v,\gamma' | \lbs xv}
+    \\
+  \Rule{\gamma | \lbs f{[\gamma']x \tto t} \quad
+    \gamma | \lbs su \quad
+    \gamma',x=u | \lbs tv}
+    {\gamma | \lbs{f\:s}v}
+    \quad
+    \Rule{\gamma | \lbs sm \quad \gamma | \lbs tn}
+      {\gamma | \lbs{\pl st}{m+n}}
+\end{array}\]
+
+In a real implementation, we get rid of variable \emph{names} entirely.
+We replace names variable usage sites by numbers called \emph{de Bruijn indices},
+locally distinguished from numerical constants by a \# marker,
+which tell us how many $\lambda$s to jump over before we find the one which bound the variable. That is
+\[
+  \la f{\la x{f\:(f\:x)}}
+\]
+becomes
+\[
+  \la{}{\la{}{\#1\:(\#1\:\#0)}}
+\]
+A de Bruijn index is just the thing to tell us \emph{where} in $\gamma$, now an
+\emph{array} of values (with 0 the rightmost index), is the value we want.
+
+
+\section{Thunks}
+
+\end{document}
