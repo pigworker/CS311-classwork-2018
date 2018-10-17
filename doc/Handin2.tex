@@ -130,6 +130,13 @@ conventions as in the lecture notes.
   $\sigma_1$ and block $\cs_1$
 \end{itemize}
 
+Now, remembering that every integer value is an integer expression, and the same for booleans,
+the idea is to compute one step at a time until the expression evolves to a value. The
+command that lays the role of a `command value' is $\{\}$, the command which gives nothing
+left to do. The \emph{empty} block is the `block value'. Of course, by the time we reach
+such an empty value, all the changes made by the command or the block will be in the new
+store.
+
 The small step semantics should agree with our big step semantics in
 the following ways:
 
