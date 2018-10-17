@@ -18,6 +18,7 @@
 \newcommand{\NT}[1]{\ang{\mathit{#1}}}
 \newcommand{\wk}[2]{#1 \backslash #2}
 \newcommand{\evalJ}[4]{#1 \,|\, #2 \Downarrow #3 \,|\, #4}
+\newcommand{\evalLam}[2]{#1 \Downarrow #2}
 
 For each of the following, mark each of the claims 1 for True
 and 0 for False in the associated Marx-file. While you may collaborate
@@ -64,15 +65,19 @@ the small step reduction semantics for LAM, which of the following claims are tr
 
 
 
-{\bf Part D:}
+\noindent {\bf Part D:} Using the big step, call-by-name, reduction
+semantics for LAM, and the terms $two$ and $id$ as defned above, which
+of the following claims are true?
+
 \begin{enumerate}
-\item d
-\item d
-\item d
-\item d
+\item $\evalLam{two \; id}{\backslash x \rightarrow id \; (id \; x)}$
+\item $\evalLam{two \; two \; id}{two \; id}$
+\item $\evalLam{3 + two}{5}$
+\item $\evalLam{two \; (\backslash x \rightarrow x + x) \; 7}{28}$
 \end{enumerate}
 
-{\bf Part E:;}
+
+{\bf Part E:}
 
 \begin{enumerate}
 \item d
