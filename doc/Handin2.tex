@@ -37,7 +37,7 @@ Which of the following claims are true?
 \end{enumerate}
 
 
-\noindent {\bf Part B:} Consider the expression $e$ given by
+\noindent {\bf Part B:} Consider the IMP-expression $e$ given by
 $$\newe{x}{8}{(\newe{x}{6}{\doe{x := x + y}{x}}) + x}$$. Which of the 
 following claims are true?
 \begin{enumerate}
@@ -48,13 +48,40 @@ following claims are true?
 \end{enumerate}
 
 
-{\bf Part C:}
+\noindent {\bf Part C:} Consider the LAM-term $two$ given by $\backslash f
+\rightarrow \backslash x \rightarrow  f (f x)$
+and the lambda term $id$ given by $\backslash x \rightarrow x$. Using
+the small step reduction semantics for LAM, which of the following claims are true?
+
+\begin{enumerate}
+\item There are no infinite reduction sequences starting from $two
+  \;\; id$
+\item All reduction sequences from $two \;\; two \;\; id$ eventually end up at $id$
+\item The term $two \; (x \; y)$ reduces to $\backslash x \rightarrow
+  (x \; y) ((x \; y) \; x)$  
+\item The term $two \; two$ reduces to $\backslash f \rightarrow  \backslash x \rightarrow f ( f ( f ( f x)))$
+\end{enumerate}
+
+
 
 {\bf Part D:}
+\begin{enumerate}
+\item d
+\item d
+\item d
+\item d
+\end{enumerate}
 
 {\bf Part E:;}
 
-{\bf Part F:}
+\begin{enumerate}
+\item d
+\item d
+\item d
+\item d
+\end{enumerate}
+
+
 
 \section{Syntax}
 
