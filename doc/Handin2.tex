@@ -17,26 +17,36 @@
 \newcommand{\ang}[1]{\langle #1 \rangle}
 \newcommand{\NT}[1]{\ang{\mathit{#1}}}
 \newcommand{\wk}[2]{#1 \backslash #2}
+\newcommand{\evalJ}[4]{#1 \,|\, #2 \Downarrow #3 \,|\, #4}
 
-For each of the following questions, marks each of the claims 1 for True
+For each of the following, mark each of the claims 1 for True
 and 0 for False in the associated Marx-file. While you may collaborate
 within your designated groups, you should submit your own answer. Please submit your answer
 by Monday 29 October 12pm. Refer to the lecture notes for the various
 semantics for IMP and LAM that we have covered in the lecures and
-which will be used here.
+which will be used here.\\[1ex]
 
 
-{\bf Part A} Consider IMP-expression $e$ given by $\newe{x}{y + 2}{\doe{x : = x-1}{x + y}}$.
+\noindent {\bf Part A} Consider IMP-expression $e$ given by $\newe{x}{y + 2}{\doe{x : = x-1}{x + y}}$.
 Which of the following claims are true?
-\begin{itemize}
-\item[1]. If $s$ is $,y := 4$ then $s | e \Downarrow  ,y:= 4, x:=5 | 9$
-\item[2]. If $s$ is $,y:= 4 z:=5$ then $s | e \Downarrow  ,y:= 4, z:=5 | 9$
-\item[3] If $s$ is $,y:= 4 x:=5$ then $s | e \Downarrow  ,y:= 4 | 9$
-\item[4] If $s$ is $,z:=5$ then $s | e \Downarrow  ,z:=5 |$
-\end{itemize}
+\begin{enumerate}
+\item If $\sigma$ is $,y := 4$ then $\evalJ{\sigma}{e}{ ,y:= 4, x:=5}{9}$
+\item If $\sigma$ is $,y:= 4, z:=5$ then $\evalJ{\sigma}{e}{ ,y:= 4, z:=5}{9}$
+\item If $\sigma$ is $,y:= 4, x:=5$ then $\evalJ{\sigma}{e}{ ,y:= 4}{9}$
+\item If $\sigma$ is $,z:=5$ then $\evalJ{\sigma}{e}{ ,z:=5}{}$
+\end{enumerate}
 
 
-{\bf Part B:}
+\noindent {\bf Part B:} Consider the expression $e$ given by
+$$\newe{x}{8}{(\newe{x}{6}{\doe{x := x + y}{x}}) + x}$$. Which of the 
+following claims are true?
+\begin{enumerate}
+\item If $\sigma$ is $,y := 4$ then $\evalJ{\sigma}{e}{,y:=5, x:=8}{18}$
+\item If $\sigma$  is $,y := 5, x:=3$ then $\evalJ{\sigma}{e}{,y:=5}{15}$
+\item If $\sigma$ is $,y := 15, x:=3$ then $\evalJ{\sigma}{e}{,y:=5,x:=3}{29}$
+\item If $\sigma$ is $,y := 15$ then $\evalJ{\sigma}{e}{,y:=5}{29}$
+\end{enumerate}
+
 
 {\bf Part C:}
 
@@ -148,7 +158,7 @@ The last example, in particular, allows us to pick out the \emph{most local} $x$
 
 \section{Judgements and Rules}
 
-\newcommand{\evalJ}[4]{#1 \,|\, #2 \Downarrow #3 \,|\, #4}
+
 
 We make logical statements about parts of programs which we call \emph{judgments}. Judgements are not just any old nonsense: they come in particular shapes called \emph{judgement forms}. The job of a judgement form is to characterise an aspect of what there is to know. Judgement forms can be given a grammar. E.g.,
 \[
