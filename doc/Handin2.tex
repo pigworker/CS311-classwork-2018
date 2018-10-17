@@ -21,34 +21,87 @@
 \newcommand{\ang}[1]{\langle #1 \rangle}
 \newcommand{\NT}[1]{\ang{\mathit{#1}}}
 \newcommand{\wk}[2]{#1 \backslash #2}
+\newcommand{\evalJ}[4]{#1 \,|\, #2 \Downarrow #3 \,|\, #4}
+\newcommand{\evalLam}[2]{#1 \Downarrow #2}
+\newcommand{\evalE}[3]{#1 \,|\, #2 \Downarrow #3}
 
-For each of the following questions, marks each of the claims 1 for True
+For each of the following, mark each of the claims 1 for True
 and 0 for False in the associated Marx-file. While you may collaborate
 within your designated groups, you should submit your own answer. Please submit your answer
 by Monday 29 October 12pm. Refer to the lecture notes for the various
 semantics for IMP and LAM that we have covered in the lecures and
-which will be used here.
+which will be used here.\\[1ex]
 
 
-{\bf Part A} Consider IMP-expression $e$ given by $\newe{x}{y + 2}{\doe{x : = x-1}{x + y}}$.
+\noindent {\bf Part A} Consider IMP-expression $e$ given by $\newe{x}{y + 2}{\doe{x : = x-1}{x + y}}$.
 Which of the following claims are true?
-\begin{itemize}
-\item[1]. If $s$ is $,y := 4$ then $s | e \Downarrow  ,y:= 4, x:=5 | 9$
-\item[2]. If $s$ is $,y:= 4 z:=5$ then $s | e \Downarrow  ,y:= 4, z:=5 | 9$
-\item[3] If $s$ is $,y:= 4 x:=5$ then $s | e \Downarrow  ,y:= 4 | 9$
-\item[4] If $s$ is $,z:=5$ then $s | e \Downarrow  ,z:=5 |$
-\end{itemize}
+\begin{enumerate}
+\item If $\sigma$ is $,y := 4$ then $\evalJ{\sigma}{e}{ ,y:= 4, x:=5}{9}$
+\item If $\sigma$ is $,y:= 4, z:=5$ then $\evalJ{\sigma}{e}{ ,y:= 4, z:=5}{9}$
+\item If $\sigma$ is $,y:= 4, x:=5$ then $\evalJ{\sigma}{e}{ ,y:= 4}{9}$
+\item If $\sigma$ is $,z:=5$ then $\evalJ{\sigma}{e}{ ,z:=5}{}$
+\end{enumerate}
 
 
-{\bf Part B:}
+\noindent {\bf Part B:} Consider the IMP-expression $e$ given by
+$$\newe{x}{8}{(\newe{x}{6}{\doe{x := x + y}{x}}) + x}$$. Which of the 
+following claims are true?
+\begin{enumerate}
+\item If $\sigma$ is $,y := 4$ then $\evalJ{\sigma}{e}{,y:=5, x:=8}{18}$
+\item If $\sigma$  is $,y := 5, x:=3$ then $\evalJ{\sigma}{e}{,y:=5}{15}$
+\item If $\sigma$ is $,y := 15, x:=3$ then $\evalJ{\sigma}{e}{,y:=5,x:=3}{29}$
+\item If $\sigma$ is $,y := 15$ then $\evalJ{\sigma}{e}{,y:=5}{29}$
+\end{enumerate}
 
-{\bf Part C:}
 
-{\bf Part D:}
+\noindent {\bf Part C:} Consider the LAM-term $two$ given by $\backslash f
+\rightarrow \backslash x \rightarrow  f (f x)$
+and the lambda term $id$ given by $\backslash x \rightarrow x$. Using
+the small step reduction semantics for LAM, which of the following claims are true?
 
-{\bf Part E:;}
+\begin{enumerate}
+\item There are no infinite reduction sequences starting from $two
+  \;\; id$
+\item All reduction sequences from $two \;\; two \;\; id$ eventually end up at $id$
+\item The term $two \; (x \; y)$ reduces to $\backslash x \rightarrow
+  (x \; y) ((x \; y) \; x)$  
+\item The term $two \; two$ reduces to $\backslash f \rightarrow  \backslash x \rightarrow f ( f ( f ( f x)))$
+\end{enumerate}
 
-{\bf Part F:}
+
+
+\noindent {\bf Part D:} Using the big-step, call-by-name, reduction
+semantics for LAM, and the terms $two$ and $id$ as defned above, which
+of the following claims are true?
+
+\begin{enumerate}
+\item $\evalLam{two \; id}{\backslash x \rightarrow id \; (id \; x)}$
+\item $\evalLam{two \; two \; id}{two \; id}$
+\item $\evalLam{3 + two}{5}$
+\item $\evalLam{two \; (\backslash x \rightarrow x + x) \; 7}{28}$
+\end{enumerate}
+
+
+\noindent {\bf Part E:} Using the big-step environment semantics for
+LAM, which of the following claims are true
+
+
+%1. ,x:=3 | (\x -> x + x) x \Downarrow ,x:=3 | 12
+%2. ,x:=3 | (\x -> x + x) id \Downarrow [,x:=3] id + id
+%3. ,x:=3, y:=6 | (\x -> x + y) 5 \Downarrow [,x=3, y:=6] 11
+%4. ,x:=3, y:= [] z -> z | (\x -> y x) 5 \Downarrow 5
+
+
+
+\begin{enumerate}
+\item $\evalJ{,x:=3}{(\backslash x \rightarrow x + x) \; x}{,x:=3}{12}$
+\item $\evalE{,x:=3}{(\backslash x \rightarrow x + x) \; id}{[,x:=3]id + id}$
+\item $\evalE{,x:=3, y:=6}{(\backslash x \rightarrow x + y) \; 5} {[,x=3, y:=6] 11}$
+\item $\evalE{,x:=3, y:= [] z \rightarrow z}{(\backslash x \rightarrow
+    y \; x) \;5}{5}$
+\end{enumerate}
+
+
 
 \section{Syntax}
 
@@ -152,7 +205,7 @@ The last example, in particular, allows us to pick out the \emph{most local} $x$
 
 \section{Judgements and Rules}
 
-\newcommand{\evalJ}[4]{#1 \,|\, #2 \Downarrow #3 \,|\, #4}
+
 
 We make logical statements about parts of programs which we call \emph{judgments}. Judgements are not just any old nonsense: they come in particular shapes called \emph{judgement forms}. The job of a judgement form is to characterise an aspect of what there is to know. Judgement forms can be given a grammar. E.g.,
 \[
