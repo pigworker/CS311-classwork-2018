@@ -4,7 +4,7 @@
 \usepackage{pig}
 
 \begin{document}
-\title{IMP --- Big Step Dynamic Semantics}
+\title{C311 October 2018: Exercise 2}
 \author{Neil Ghani and Conor McBride}
 \maketitle
 
@@ -17,6 +17,34 @@
 \newcommand{\ang}[1]{\langle #1 \rangle}
 \newcommand{\NT}[1]{\ang{\mathit{#1}}}
 \newcommand{\wk}[2]{#1 \backslash #2}
+
+For each of the following questions, marks each of the claims 1 for True
+and 0 for False in the associated Marx-file. While you may collaborate
+within your designated groups, you should submit your own answer. Please submit your answer
+by Monday 29 October 12pm. Refer to the lecture notes for the various
+semantics for IMP and LAM that we have covered in the lecures and
+which will be used here.
+
+
+{\bf Part A} Consider IMP-expression $e$ given by $\newe{x}{y + 2}{\doe{x : = x-1}{x + y}}$.
+Which of the following claims are true?
+\begin{itemize}
+\item[1]. If $s$ is $,y := 4$ then $s | e \Downarrow  ,y:= 4, x:=5 | 9$
+\item[2]. If $s$ is $,y:= 4 z:=5$ then $s | e \Downarrow  ,y:= 4, z:=5 | 9$
+\item[3] If $s$ is $,y:= 4 x:=5$ then $s | e \Downarrow  ,y:= 4 | 9$
+\item[4] If $s$ is $,z:=5$ then $s | e \Downarrow  ,z:=5 |$
+\end{itemize}
+
+
+{\bf Part B:}
+
+{\bf Part C:}
+
+{\bf Part D:}
+
+{\bf Part E:;}
+
+{\bf Part F:}
 
 \section{Syntax}
 
