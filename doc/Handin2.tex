@@ -19,6 +19,7 @@
 \newcommand{\wk}[2]{#1 \backslash #2}
 \newcommand{\evalJ}[4]{#1 \,|\, #2 \Downarrow #3 \,|\, #4}
 \newcommand{\evalLam}[2]{#1 \Downarrow #2}
+\newcommand{\evalE}[3]{#1 \,|\, #2 \Downarrow #3}
 
 For each of the following, mark each of the claims 1 for True
 and 0 for False in the associated Marx-file. While you may collaborate
@@ -65,7 +66,7 @@ the small step reduction semantics for LAM, which of the following claims are tr
 
 
 
-\noindent {\bf Part D:} Using the big step, call-by-name, reduction
+\noindent {\bf Part D:} Using the big-step, call-by-name, reduction
 semantics for LAM, and the terms $two$ and $id$ as defned above, which
 of the following claims are true?
 
@@ -77,13 +78,23 @@ of the following claims are true?
 \end{enumerate}
 
 
-{\bf Part E:}
+\noindent {\bf Part E:} Using the big-step environment semantics for
+LAM, which of the following claims are true
+
+
+%1. ,x:=3 | (\x -> x + x) x \Downarrow ,x:=3 | 12
+%2. ,x:=3 | (\x -> x + x) id \Downarrow [,x:=3] id + id
+%3. ,x:=3, y:=6 | (\x -> x + y) 5 \Downarrow [,x=3, y:=6] 11
+%4. ,x:=3, y:= [] z -> z | (\x -> y x) 5 \Downarrow 5
+
+
 
 \begin{enumerate}
-\item d
-\item d
-\item d
-\item d
+\item $\evalJ{,x:=3}{(\backslash x \rightarrow x + x) \; x}{,x:=3}{12}$
+\item $\evalE{,x:=3}{(\backslash x \rightarrow x + x) \; id}{[,x:=3]id + id}$
+\item $\evalE{,x:=3, y:=6}{(\backslash x \rightarrow x + y) \; 5} {[,x=3, y:=6] 11}$
+\item $\evalE{,x:=3, y:= [] z \rightarrow z}{(\backslash x \rightarrow
+    y \; x) \;5}{5}$
 \end{enumerate}
 
 
