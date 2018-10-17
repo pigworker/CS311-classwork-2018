@@ -1,6 +1,10 @@
 \documentclass{article}
 \usepackage{a4wide}
 \usepackage{alltt}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{latexsym}
+\usepackage{stmaryrd}
 \usepackage{pig}
 
 \begin{document}
@@ -304,6 +308,91 @@ integer values yielding one bit results.
 The rules for `and' and `or' make explicit that if the first
 subexpression determines the outcome, the second is \emph{not}
 evaluated. This is known as \emph{short-circuiting}.
+
+
+
+%%%%%%%%%% SMALL STEP RULES
+\newcommand{\ssj}[4]{#1|#2 \;\leadsto\; #3|#4}
+
+We plan to devise a \emph{small step} semantics for IMP, and we need
+your help. We have the following judgement forms.
+
+\begin{itemize}
+\item $\ssj{\sigma_0}{e_0}{\sigma_1}{e_1}$\\
+  starting with store $\sigma_0$, integer expression $e_0$ steps to store $\sigma_1$ and integer expression $e_1$
+\item $\ssj{\sigma_0}{p_0}{\sigma_1}{p_1}$\\
+  starting with store $\sigma_0$, boolean expression $p_0$ steps to
+  store $\sigma_1$ and boolean expression $p_1$
+\item $\ssj{\sigma_0}{c_0}{\sigma_1}{c_1}$\\
+  starting with store $\sigma_0$, executing command $c$ steps to store
+  $\sigma_1$ and command $c_1$
+\item $\ssj{\sigma_0}{\cs_0}{\sigma_1}{\cs_1}$\\
+  starting with store $\sigma_0$, executing block $\cs$ steps to store
+  $\sigma_1$ and block $\cs_1$
+\end{itemize}
+
+The small step semantics should agree with our big step semantics in
+the following ways:
+
+\begin{itemize}
+  \item For integer expressions, exactly when $\evalJ{\sigma}{e}{\sigma'}{v}$, there should
+    be a (possibly empty) sequence of small steps
+    $\ssj{\sigma}{e}{\sigma_1}{e_1} \;\;
+    \ssj{\sigma_1}{e_1}{\sigma_2}{e_2}\;\;\ldots\;\;
+    \ssj{\sigma_n}{e_n}{\sigma'}{v}$
+  \item For boolean expressions, exactly when $\evalJ{\sigma}{p}{\sigma'}{b}$, there should
+    be a (possibly empty) sequence of small steps
+    $\ssj{\sigma}{p}{\sigma_1}{p_1} \;\;
+    \ssj{\sigma_1}{p_1}{\sigma_2}{p_2}\;\;\ldots\;\;
+    \ssj{\sigma_n}{p_n}{\sigma'}{b}$
+  \item For commands, exactly when $\execJ{\sigma}{c}{\sigma'}$, there should
+    be a (possibly empty) sequence of small steps
+    $\ssj{\sigma}{c}{\sigma_1}{c_1} \;\;
+    \ssj{\sigma_1}{c_1}{\sigma_2}{c_2}\;\;\ldots\;\;
+    \ssj{\sigma_n}{c_n}{\sigma'}{\{\}}$
+  \item For blocks, exactly when $\execJ{\sigma}{\cs}{\sigma'}$, there should
+    be a (possibly empty) sequence of small steps
+    $\ssj{\sigma}{\cs}{\sigma_1}{\cs_1} \;\;
+    \ssj{\sigma_1}{\cs_1}{\sigma_2}{\cs_2}\;\;\ldots\;\;
+    \ssj{\sigma_n}{\cs_n}{\sigma'}{}$
+\end{itemize}
+
+We are confident in the following rules:
+
+\[\begin{array}{c}
+  \Rule{\ssj\sigma e{\sigma'}{e'}}
+  {\ssj\sigma{x:=e}{\sigma'}{x:=e'}}
+    \qquad
+  \Axiom{\ssj{\sigma,x:=v,\wk x{\sigma'}}{x:=v'}{\sigma,x:=v',\sigma'}{\{\}}}    
+    \\
+  \Rule{\ssj\sigma\cs{\sigma'}{\cs'}}
+    {\ssj\sigma{\{\cs\}}{\sigma'}{\{\cs'\}}}
+    \\
+    \Axiom{\ssj\sigma{\ifel{0}{c_1}{c_0}}\sigma{c_0}}
+    \\
+    \Rule{\ssj\sigma{e_0}{\sigma\}{e'_0}}}
+    {\ssj\sigma{\newe x{e_0}{e_1}}{\sigma'}{\newe x{e'_0}{e_1}}}
+    \qquad
+    \Axiom{\ssj\sigma{v_0\texttt{+}v_1}\sigma{v_0+v_1}}
+\end{array}\]
+
+Note that, in the rule for addition, the step is from the addition of
+two values to the value which is their sum: it is not doing nothing!
+
+For each of the following rules, we claim that they are good rules to
+add if we want to achieve the correspondence we seek. We want you to
+tell us if, in each case, the claim is true.
+
+\[\begin{array}{rc}
+    1. & \Axiom{\ssj\sigma{\{\};\cs}\sigma\cs} \\
+    2. & \Rule{\ssj\sigma c{\sigma'}{c'}}
+         {\ssj\sigma {c;\cs}{\sigma'}{c';\cs}} \\
+    3. & \Rule{\ssj\sigma \cs{\sigma'}{\cs'}}
+         {\ssj\sigma {c;\cs}{\sigma'}{c;\cs'}} \\
+    4. & \Rule{\ssj\sigma{c_1}{\sigma'}{c'_1}}
+              {\ssj\sigma{\ifel{p}{c_1}{c_0}}{\sigma'}{\ifel{p}{c'_1}{c_0}}}
+    \\
+\end{array}  \]
 
 
 \end{document}
