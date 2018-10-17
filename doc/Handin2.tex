@@ -113,7 +113,8 @@ LAM, which of the following claims are true
 \newcommand{\ssj}[4]{#1|#2 \;\leadsto\; #3|#4}
 
 \noindent {\bf Part F:} We plan to devise a \emph{small step} semantics for IMP, and we need
-your help. We have the following judgement forms.
+your help. We have the following judgement forms, following the same metavariable naming
+conventions as in the lecture notes.
 
 \begin{itemize}
 \item $\ssj{\sigma_0}{e_0}{\sigma_1}{e_1}$\\
@@ -188,9 +189,24 @@ tell us if, in each case, the claim is true.
     3. & \Rule{\ssj\sigma \cs{\sigma'}{\cs'}}
          {\ssj\sigma {c;\cs}{\sigma'}{c;\cs'}} \\
     4. & \Rule{\ssj\sigma{c_1}{\sigma'}{c'_1}}
-              {\ssj\sigma{\ifel{p}{c_1}{c_0}}{\sigma'}{\ifel{p}{c'_1}{c_0}}}
-    \\
+         {\ssj\sigma{\ifel{p}{c_1}{c_0}}{\sigma'}{\ifel{p}{c'_1}{c_0}}} \\
+    5. & \Axiom{\ssj\sigma{\whi pc}\sigma{\{c;\ifel p{\{\whi pc;\}}{\{\}}\}}} \\
+    6. & \Axiom{\ssj\sigma{\whi pc}\sigma{\ifel p{\{c;\whi pc;\}}{\{\}}}} \\
+    7. & \Axiom{\ssj{\sigma,x:=v,\wk x{\sigma'}}x\sigma v} \\
+    8. & \Rule{\ssj\sigma{e_0}{\sigma'}{e'_0}}
+            {\ssj\sigma{e_0\texttt{+}e_1}{\sigma'}{e'_0\texttt{+}e_1}} \\
+    9. & \Rule{\ssj\sigma{e_1}{\sigma'}{e'_1}}
+            {\ssj\sigma{e_0\texttt{+}e_1}{\sigma'}{e_0\texttt{+}e'_1}} \\
+    10. & \Rule{\ssj\sigma{e_1}{\sigma'}{e'_1}}
+          {\ssj\sigma{v_0\texttt{+}e_1}{\sigma'}{v_0\texttt{+}e'_1}} \\
+    11. & \Rule{\ssj{\sigma,x:=e_0}{e_1}{\sigma',x:=e'_0}{e'_1}}
+          {\ssj\sigma{\newe x{e_0}{e_1}}{\sigma'}{\newe x{e'_0}{e'_1}}} \\
+    12. & \Axiom{\ssj\sigma{\newe xn{n'}}\sigma{n'}}
 \end{array}  \]
 
+Of course, there are still plenty of rules missing. We do not claim we
+have the full set of small step rules: e.g., we have given no rules
+for boolean expressions, so far. It may help to think about what they
+should be, and try some examples.
 
 \end{document}
