@@ -113,7 +113,7 @@ Examples:
 \item $\sigma$ matches any store
 \item $x := v$ matches the store which consists exactly of the assignment of $v$ to $x$
 \item $\sigma, x := v$ matches the store whose rightmost assignment is of $v$ to $x$, with $\sigma$ being everything to the left of that assignment
-\item $\sigma_0, x := v, \wk x{\sigma_1}$ matches any store which contains at least one assignment to $x$, with $v$ being the rightmost value assigned to $x$, because the $x^\ast\sigma_1$ matches only stores $\sigma_1$ which do not contain $x$; to the left, we have $\sigma_0$, which may contain zero or more other assignments to $x$
+\item $\sigma_0, x := v, \wk x{\sigma_1}$ matches any store which contains at least one assignment to $x$, with $v$ being the rightmost value assigned to $x$, because the $\wk x{\sigma_1}$ matches only stores $\sigma_1$ which do not contain $x$; to the left, we have $\sigma_0$, which may contain zero or more other assignments to $x$
 \end{itemize}
 By convention, scopes are ordered by \emph{locality}, with more local things to the right of less local things.
 The last example, in particular, allows us to pick out the \emph{most local} $x$ which is the $x$ that is in scope. The $x$s in $\sigma_0$ are \emph{shadowed}.
@@ -140,7 +140,7 @@ We then write \emph{rules} which tell us how to \emph{derive} (i.e., prove) that
   \]
   means `to show judgement $J$, you must in turn show each of tyhe judgments $J_1, \ldots, J_n$'. We say $J$ is the \emph{conclusion} of the rule and the $J_i$ are its \emph{premises}. Whatever else anybody may have told you, we always work \emph{backwards} from a judgment we want to establish to find a \emph{derivation} which establishes it. We can stop when we reach a rule with zero premises: such a rule is called an \emph{axiom}. E.g.
   \[
-    \Axiom{\evalJ\sigma v\Sigma v}
+    \Axiom{\evalJ\sigma v\sigma v}
   \]
 is an axiom stating that an expression which takes the form of an integer value evaluates to that very value, without changing the state.
 
@@ -216,7 +216,7 @@ We may now write the rules for each judgement form. It is traditional to write t
       {\evalJ{\sigma_0}{e_0 \mathtt{+} e_1}{\sigma_2}{v_0 + v_1}}\\
     \Rule{\evalJ{\sigma_0}{e_0}{\sigma_1}{v_0}\quad \evalJ{\sigma_1}{e_1}{\sigma_2}{v_1}}
       {\evalJ{\sigma_0}{e_0 \mathtt{-} e_1}{\sigma_2}{v_0 - v_1}}\\
-    \Rule{\evalJ{\sigma_0}{e_0}{\sigma_1}{v_0} \quad \evalJ{\sigma_1,x:=v}{e_1}{\sigma_2,x:=v_2}{v_1}}
+    \Rule{\evalJ{\sigma_0}{e_0}{\sigma_1}{v_0} \quad \evalJ{\sigma_1,x:=v_0}{e_1}{\sigma_2,x:=v_2}{v_1}}
          {\evalJ{\sigma_0}{\newe x{e_0}{e_1}}{\sigma_2}{v_1}}\\
     \Rule{\execJ{\sigma_0}{c}{\sigma_1} \quad \evalJ{\sigma_1}{e}{\sigma_2}{v}}
          {\evalJ{\sigma_0}{\doe ce}{\sigma_2}{v}}\\
