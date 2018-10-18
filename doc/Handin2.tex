@@ -25,6 +25,9 @@
 \newcommand{\evalLam}[2]{#1 \Downarrow #2}
 \newcommand{\evalE}[3]{#1 \,|\, #2 \Downarrow #3}
 
+\newcommand{\id}{\mathit{id}}
+\newcommand{\two}{\mathit{two}}
+
 For each of the following, mark each of the claims 1 for True
 and 0 for False in the associated Marx-file. While you may collaborate
 within your designated groups, you should submit your own answer. Please submit your answer
@@ -54,7 +57,7 @@ following claims are true?
 \end{enumerate}
 
 
-\noindent {\bf Part C:} Consider the LAM-term $two$ given by $\backslash f
+\noindent {\bf Part C:} Consider the LAM-term $\two$ given by $\backslash f
 \rightarrow \backslash x \rightarrow  f (f x)$
 and the lambda term $id$ given by $\backslash x \rightarrow x$. Using
 the small step reduction semantics for LAM, which of the following claims are true?
@@ -62,23 +65,23 @@ the small step reduction semantics for LAM, which of the following claims are tr
 \begin{enumerate}
 \item There are no infinite reduction sequences starting from $two
   \;\; id$
-\item All reduction sequences from $two \;\; two \;\; id$ eventually end up at $id$
-\item The term $two \; (x \; y)$ reduces to $\backslash x \rightarrow
+\item All reduction sequences from $\two \;\; \two \;\; \id$ eventually end up at $id$
+\item The term $\two \; (x \; y)$ reduces to $\backslash x \rightarrow
   (x \; y) ((x \; y) \; x)$  
-\item The term $two \; two$ reduces to $\backslash f \rightarrow  \backslash x \rightarrow f ( f ( f ( f x)))$
+\item The term $\two \; \two$ reduces to $\backslash f \rightarrow  \backslash x \rightarrow f ( f ( f ( f x)))$
 \end{enumerate}
 
 
 
 \noindent {\bf Part D:} Using the big-step, call-by-name, reduction
-semantics for LAM, and the terms $two$ and $id$ as defned above, which
+semantics for LAM, and the terms $\two$ and $\id$ as defined above, which
 of the following claims are true?
 
 \begin{enumerate}
-\item $\evalLam{two \; id}{\backslash x \rightarrow id \; (id \; x)}$
-\item $\evalLam{two \; two \; id}{two \; id}$
-\item $\evalLam{3 + two}{5}$
-\item $\evalLam{two \; (\backslash x \rightarrow x + x) \; 7}{28}$
+\item $\evalLam{\two \; \id}{\backslash x \rightarrow \id \; (\id \; x)}$
+\item $\evalLam{\two \; \two \; id}{\two \; \id}$
+\item $\evalLam{(3 + \two)}{5}$
+\item $\evalLam{\two \; (\backslash x \rightarrow (x + x)) \; 7}{28}$
 \end{enumerate}
 
 
@@ -86,17 +89,17 @@ of the following claims are true?
 LAM, which of the following claims are true
 
 
-%1. ,x:=3 | (\x -> x + x) x \Downarrow ,x:=3 | 12
-%2. ,x:=3 | (\x -> x + x) id \Downarrow [,x:=3] id + id
-%3. ,x:=3, y:=6 | (\x -> x + y) 5 \Downarrow [,x=3, y:=6] 11
+%1. ,x:=3 | (\x -> (x + x)) x \Downarrow ,x:=3 | 12
+%2. ,x:=3 | (\x -> (x + x)) id \Downarrow [,x:=3] (id + id)
+%3. ,x:=3, y:=6 | (\x -> (x + y)) 5 \Downarrow [,x=3, y:=6] 11
 %4. ,x:=3, y:= [] z -> z | (\x -> y x) 5 \Downarrow 5
 
 
 
 \begin{enumerate}
-\item $\evalJ{,x:=3}{(\backslash x \rightarrow x + x) \; x}{,x:=3}{12}$
-\item $\evalE{,x:=3}{(\backslash x \rightarrow x + x) \; id}{[,x:=3]id + id}$
-\item $\evalE{,x:=3, y:=6}{(\backslash x \rightarrow x + y) \; 5} {[,x=3, y:=6] 11}$
+\item $\evalJ{,x:=3}{(\backslash x \rightarrow (x + x)) \; x}{,x:=3}{12}$
+\item $\evalE{,x:=3}{(\backslash x \rightarrow (x + x)) \; \id}{[,x:=3](\id + \id)}$
+\item $\evalE{,x:=3, y:=6}{(\backslash x \rightarrow (x + y)) \; 5} {[,x=3, y:=6] 11}$
 \item $\evalE{,x:=3, y:= [] z \rightarrow z}{(\backslash x \rightarrow
     y \; x) \;5}{5}$
 \end{enumerate}
