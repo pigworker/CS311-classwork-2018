@@ -81,7 +81,7 @@ Let us start by making the grammar simpler but more chaotic.
     | <place>
     | <place> := <exp>
     | {<block>}
-    | ! <bexp>
+    | ! <exp>
     | <exp> <op> <exp>
     | new <var> := <exp> in <exp>
     | if (<exp>) <exp> else <exp>
@@ -144,7 +144,7 @@ and blocks $\es$.
 
 Let us have the rules for places, which effectively look up the rightmost occurrence of a variable in the context.
 \[\begin{array}{c}
-    \fbx{\JPl \Gamma p\tau} \medskip \\
+    \fbx{\JPl \Gamma x\tau} \medskip \\
 
     \Axiom{\JPl{\Gamma,x:\tau} x\tau} \qquad
     \Rule{\JPl \Gamma x\tau \quad x\neq y}
@@ -245,15 +245,16 @@ commands.
 \[
   \NT{value} ::= \NT{integer} \;|\; \false \;|\; \true \;|\; \star
 \]
-and we have a mapping, $\VT -$ from values to types, such that
-\[\VT\star = \void\quad \VT\false=\VT\true=\bool\quad
-  \VT 0 = \intg, \VT 1 = \intg,\ldots
-\]
+and we have a typing judgement for values (which needs no context)
+\[\begin{array}{c}
+    \fbx{v : \tau} \medskip \\
+    \Axiom{n : \intg} \qquad \Axiom{\false : \bool}\qquad \Axiom{\true : \bool}\qquad \Axiom{\star : \void}
+\end{array}  \]
 
 We can say when a \emph{store} fits a \emph{context}:
 \[
   \Axiom{\;:\;} \qquad
-  \Rule{\sigma \;:\;\Gamma}{\sigma,x:=v \;:\; \Gamma,x:\VT v}
+  \Rule{\sigma \;:\;\Gamma\quad v:\tau}{\sigma,x:=v \;:\; \Gamma,x:\tau}
 \]
 That is, we think of contexts as the types of stores, with the empty store fitting the empty context and each extension having its designated type.
 
@@ -265,45 +266,53 @@ We may now have judgment forms
 \item $\JEvs{\sigma_0}{v_0}\es{\sigma_1}{v_1}$\\
   starting with store $\sigma_0$ and last seen value $v_0$, block
   $\es$ yields final store $\sigma_1$ and value $v_1$
-\item $\JPll\sigma pv$\\
-  accessing place $p$ in store $\sigma$ yields
+\item $\JPll\sigma xv$\\
+  accessing variable $x$ in store $\sigma$ yields
   value $v$
-\item $\JPla{\sigma_0}pv{\sigma_1}$\\
-  updating place $p$ with value $v$ in store $\sigma_0$ yields
+\item $\JPla{\sigma_0}xv{\sigma_1}$\\
+  updating variable $x$ with value $v$ in store $\sigma_0$ yields
   store $\sigma_1$
 \end{itemize}
 
 Let us have edited highlights of the rules. For expressions,
 we now have
 \[\begin{array}{c}
-  \Rule{\JPll\sigma pv}
-  {\JEv \sigma p\sigma v}
+  \Rule{\JPll\sigma xv}
+  {\JEv \sigma x\sigma v}
   \qquad
   \Rule{\JEv{\sigma_0}e{\sigma_1}v\quad
-    \JPla{\sigma_1}pv{\sigma_2}}
-  {\JEv{\sigma_0}{p\ass v}{\sigma_2}\star}
+    \JPla{\sigma_1}xv{\sigma_2}}
+  {\JEv{\sigma_0}{x\ass v}{\sigma_2}\star}
   \qquad
   \Rule{\JEvs{\sigma_0}\star\es{\sigma_1}v}
   {\JEv{\sigma_0}{\{\es\}}{\sigma_1}v}
   \\
   \Rule{\sigma_0|e_0 \Downarrow \sigma_1, v_0\quad
     \sigma_1,x:=v_0|e_1 \Downarrow \sigma_2,x:=v'|v_1}
-  {\sigma_0|\newe x{e_0}{e_1} \Downarrow \sigma_2 | v_1}
+    {\sigma_0|\newe x{e_0}{e_1} \Downarrow \sigma_2 | v_1}\\
+    \Rule{\JEv{\sigma_0}{e_b}{\sigma_1}\false  }
+    {\JEv{\sigma_0}{\whi{e_b}{e_l}}{\sigma_1}{\star}}
+\\
+    \Rule{\JEv{\sigma_0}{e_b}{\sigma_1}\true \qquad \JEv{\sigma_1}{e_l}{\sigma_2}{\star} \qquad
+      \JEv{\sigma_2}{\whi{e_b}{e_l}}{\sigma_3}{\star}  }
+    {\JEv{\sigma_0}{\whi{e_b}{e_l}}{\sigma_3}{\star}}
   \end{array}\]
 
 For blocks,
 \[
   \Axiom{\JEvs\sigma v{}\sigma v} \qquad
   \Rule{\JEv{\sigma_0}e{\sigma_1}{v_1} \quad
-    \JEvs{\sigma_1}{v_1}{\sigma_2}{v_2}}
-  {\JEv{\sigma_0}{v_1}{e;\es}{\sigma_2}{v_2}}
+    \JEvs{\sigma_1}{v_1}{\es}{\sigma_2}{v_2}}
+  {\JEvs{\sigma_0}{v_1}{e;\es}{\sigma_2}{v_2}}
 \]
+
 For looking up places,
 \[
   \Axiom{\JPll{\sigma,x:=v}xv} \qquad
   \Rule{\JPll\sigma xv \quad x\neq y}
         {\JPll{\sigma,y:=v'}xv}
 \]
+
 For updating places,
 \[
   \Axiom{\JPla{\sigma,x:=v_0}xv{\sigma,x:=v}} \qquad
@@ -317,13 +326,13 @@ For updating places,
 We ought to get repaid with some confidence about the behaviour of the dynamic semantics, in return for imposing a static semantics.
 
 For example, if we know $\sigma_0 \;:\; \Gamma$ and $\JPl\Gamma p\tau$,
-then there \emph{must} be a $v$ such that $\VT v = \tau$ and $\JPll\sigma pv$.
+then there \emph{must} be a $v$ such that $v : \tau$ and $\JPll\sigma pv$.
 The static semantics checks that all variables accesses are properly
 in scope, with a type given by the context, so if the store fits the
 context, a variable lookup must succeed and give us a value of the correct type, to boot.
 
 Moreover, if we know $\sigma_0 \;:\; \Gamma$, $\JPl\Gamma p\tau$ and
-$\VT v = \tau$, then there \emph{must} be a $\sigma_1$ such that
+$v : \tau$, then there \emph{must} be a $\sigma_1$ such that
 $\JPla{\sigma_0}pv{\sigma_1}$ and, moreover, $\sigma_1\;:\;\Gamma$.
 Updating a store which fits a context by filling a place of known type with
 a value of that type must give us a store which fits the same context.
@@ -336,7 +345,7 @@ expression like
 which do not terminate.
 
 However, we can say that if $\JEx\Gamma e\tau$ and $\sigma_0\;:\;\Gamma$
-and $\JEv{\sigma_0}ev{\sigma_1}$, then $\VT v = \tau$ and $\sigma_1\;:\;\Gamma$.
+and $\JEv{\sigma_0}ev{\sigma_1}$, then $v : \tau$ and $\sigma_1\;:\;\Gamma$.
 That is, we should have the \emph{type preservation} property. (Think about
 how to state the necessary result for blocks.)
 
@@ -344,10 +353,64 @@ We should aim for more than preservation, though. When a well typed program fail
 that getting stuck in a loop is the only reason why a well typed program can fail to produce a value. In a small step semantics it is easy to state the \emph{progress} property, namely that every well typed program either has stopped already, or will take a step to another program of the same type.
 
 In a big step
-semantics, it is more usual to define judgements corresponding to the property
-that a program is `still going after $n$ iterations of while loops, with given
-store at that time'. It should be the case that if a well typed program with an initial store that fits its context somehow does not evaluate, then it should still be going after $n$ steps for any $n$, and its store at that time should still fit the context.
-We shall spare you the details of the setup.
+semantics, it is more usual to refine judgements with a notion of
+`fuel' which is spent by while-loops. Evaluation can stop by running
+out of fuel, as well as by producing a value. We model this outcome
+by adding an extra value, $\bot$, pronounced ``bottom'' in every type:
+\[
+  \Axiom{\bot : \tau}
+  \]
+
+\newcommand{\JfEv}[5]{#1 \;|\; #2 \;\Downarrow_{#5}\; #3 \;|\; #4} 
+\newcommand{\JfEvs}[6]{#1 \;|\; #2 \;\backslash\; #3 \;\Downarrow_{#6}\; #4 \;|\; #5}
+Our evaluation judgment forms are now
+\[\JfEv{\sigma_0}{e}{\sigma_1}{v}{n} \qquad
+  \JfEvs{\sigma_0}{\es}{v_0}{\sigma_1}{v_1}{n}
+\]
+where the extra $n$ is the amount of fuel supplied, meaning that each
+loop body may run at most $n$ times. Crucially, we demand
+\[\begin{array}{c}
+    \Rule{\JfEv{\sigma_0}{e_b}{\sigma_1}\true{0}}
+    {\JfEv{\sigma_0}{\whi{e_b}{e_l}}{\sigma_1}{\bot}{0}}
+    \\
+    \Rule{\JfEv{\sigma_0}{e_b}{\sigma_1}\true{n+1} \qquad \JfEv{\sigma_1}{e_l}{\sigma_2}{\star}{n+1} \qquad
+      \JfEv{\sigma_2}{\whi{e_b}{e_l}}{\sigma_3}{v}{n}  }
+    {\JfEv{\sigma_0}{\whi{e_b}{e_l}}{\sigma_3}{v}{n+1}}
+\end{array}\]
+The rationale is this: in every rule premise for a subexpression,
+the fuel stays the same; in every other premise, the fuel decreases.
+In every case, something is getting smaller, so we cannot keep going
+for ever. We can decorate all our usual rules this way.
+We also need rules to check for success and to propagate failure:
+abandon evaluation at the first sign of
+$\bot$! E.g.,
+\[
+  \Rule{\JfEv{\sigma_0}{e_b}{\sigma_1}\bot{n+1} }
+  {\JfEv{\sigma_0}{\whi{e_b}{e_l}}{\sigma_3}{\bot}{n+1}}
+  \qquad
+  \Rule{\JfEv{\sigma_0}{e_b}{\sigma_1}\true{n+1} \qquad \JfEv{\sigma_1}{e_l}{\sigma_2}{\bot}{n+1} }
+    {\JfEv{\sigma_0}{\whi{e_b}{e_l}}{\sigma_3}{\bot}{n+1}}
+  \]
+In rules with subevaluations, we must make sure that each does not
+  yield $\bot$ before we do any more work.
+\[
+  \Axiom{\JfEvs{\sigma_0}{\bot}{\es}{\sigma_0}{\bot}{n}} \qquad
+ \Rule{\JfEv{\sigma_0}e{\sigma_1}{v_1}n \quad v_1\neq\bot\quad
+    \JfEvs{\sigma_1}{v_1}{\es}{\sigma_2}{v_2}n}
+   {\JfEvs{\sigma_0}{v_1}{e;\es}{\sigma_2}{v_2}n}
+\]
+Refining all the rules with fuel and $\bot$ takes effort rather than
+imagination. We may then prove the following:
+\begin{itemize}
+\item If $\JfEv{\sigma_0}{e}{\sigma_1}{v}{n}$ and $v\neq \bot$, then
+  $\JfEv{\sigma_0}{e}{\sigma_1}{v}{n+1}$. (That is, failure is never
+  caused by supplying \emph{more} fuel.)
+\item If $\JEx{\Gamma}{e}{\tau}$ and $\sigma_0\;:\:\Gamma$, then for
+  any amount of fuel $n$, $\JfEv{\sigma_0}{e}{\sigma_1}{v}{n}$ for
+  some $v:\tau$ and $\sigma_1\;:\:\Gamma$. (So, we always get a
+  value of the right type, but it might be $\bot$. Even if it is,
+  the final store when we ran out of fuel still fits the context.)
+\end{itemize}
 
 
 \section{Arrays}
@@ -387,7 +450,11 @@ We should further extend our notion of \emph{value} with some means to represent
                               \end{array}\right.
 \]
 and our $\arr{e}$ construct kicks us off with the function which gives
-$e$'s value for every index.
+$e$'s value for every index. Thes function values have array types: sampling
+one stored value is enough to find out the type of the array's elements.
+\[\Rule{f(0):\tau}
+       {f:\arr\tau}
+  \]
 
 However, we are not out of the woods. We now have places which can contain
 arbitrary expressions, so they now need a notion of value. These are
@@ -400,12 +467,39 @@ We need a judgement for evaluating places to l-values, $l$ which can mutate the
 store.
 \[\begin{array}{c}
     \fbx{\JEv{\sigma_0}{p}{\sigma_1}{l}} \medskip \\
-    \Axiom{\JEv{\sigma}{\sigma}x} \qquad
+    \Axiom{\JEv{\sigma}x{\sigma}x} \qquad
     \Rule{\JEv{\sigma_0}p{\sigma_1}l\quad
     \JEv{\sigma_1}e{\sigma_2}n}
     {\JEv{\sigma_0}p{\sigma_2}{l[n]}}
   \end{array}  \]
+The assignment rule
+becomes
+\[\Rule{\JEv{\sigma_0}p{\sigma_1}l\quad\JEv{\sigma_1}e{\sigma_2}v\quad\JPla{\sigma_2}lv{\sigma_3}}
+  {\JEv{\sigma_0}{p\ass e}{\sigma_3}\star}
+\]
+because it has to evaluate where to put the thing, as well as what to put there.
+
 Our lookup judgement should now properly look up lvalues instead.
 Our update judgement needs to update at a given lvalue, too.
-  
+\[
+  \Rule{\JPll{\sigma}lv}
+  {\JPll{\sigma}{l[n]}{v(n)}}
+  \qquad
+  \Rule{\JPll{\sigma_0}lu\quad\JPla{\sigma_0}l{u[n\mapsto v]}{\sigma_1}}
+       {\JPla{\sigma_0}{l[n]}v{\sigma_1}}
+  \]
+That is to say, to look up an array access, look up the whole array and
+access it. To update one entry of an array, look up the whole array, then
+update the whole thing (with one entry changed).
+
+And that's it! We added a feature by asking (and answering)
+\begin{itemize}
+\item What new types do we need?
+\item What do we need to add to the grammar to make use of those types?
+\item What new typing rules do we need, for our new constructs?
+\item What new notions of value do we need for those types?
+\item How do the new constructs evaluate?
+\end{itemize}
+
+
 \end{document}
