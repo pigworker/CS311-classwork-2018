@@ -1,0 +1,329 @@
+\documentclass{article}
+\usepackage{a4wide}
+\usepackage{amsfonts}
+\usepackage{stmaryrd}
+\usepackage{alltt}
+\usepackage{pig}
+
+\begin{document}
+\title{There Is No Magic \\
+  Type Inference for LAM}
+\author{Neil Ghani and Conor McBride}
+\maketitle
+
+\newcommand{\Nat}{\mathbb{N}}
+\newcommand{\fbx}[1]{\framebox{\ensuremath{#1}}}
+\newcommand{\NT}[1]{\langle #1 \rangle}
+  
+\section{Introduction}
+
+Our typing rules for LAM have been given as follows:
+\[\begin{array}{c}
+    \Axiom{\Gamma_0,x:\sigma,\Gamma_1 \vdash x:\sigma}\qquad
+    \Rule{\Gamma,x:\sigma\vdash t:\tau}
+    {\Gamma\vdash \lambda x \to t : \sigma \to \tau}\qquad
+    \Rule{\Gamma\vdash f:\sigma\to\tau\quad \Gamma\vdash s:\sigma}
+    {\Gamma\vdash f\:s : \tau}
+    \\
+    \Axiom{\Gamma\vdash n:\Nat} \qquad
+    \Rule{\Gamma\vdash s:\Nat\quad\Gamma\vdash t:\Nat}
+      {\Gamma\vdash (s+t) : \Nat}
+\end{array}\]
+
+One should rightly be suspicious of these rules. On the one hand,
+if types are thought of as an \emph{input} to be \emph{checked},
+where on earth does $\sigma$ come from in the rule for application?
+On the other hand, if types are thought of as an \emph{output} to be
+\emph{synthesized}, where on earth does the $\sigma$ come from in
+the rule for $\lambda$? Either way, the `right' type is seemingly conjured
+from thin air!
+
+What really happens when computers give types to LAM terms?
+
+
+\section{Normal Forms}
+
+If we write down the grammar of $\beta$-normal terms, something
+interesting happens
+\[\begin{array}{lrl}
+    \NT{normal} & ::= & \lambda \NT{var} \to \NT{normal} \\
+    & | & \NT{number} \\
+    & | & \NT{neutral} \medskip \\
+    \NT{neutral} & ::= & \NT{var} \\
+   & | &  \NT{neutral} \;  \NT{normal} \\
+   & | &  (\NT{neutral} +  \NT{normal}) \\
+   & | &  (\NT{number} +  \NT{neutral}) \\
+\end{array}  \]
+We have carefully ensured that `neutral' terms are \emph{stuck}
+for some reason --- always, ultimately, that there is a free
+variable getting in the way of computation. The `normal' forms
+are things that can be value-like --- numbers or $\lambda$-abstractions ---
+but they are prevented from standing in any place that could trigger
+a reduction.
+
+We \emph{can} give a sensible algorithmic system for typing this syntax.
+The trick is to treat types as an input for normals but an output for neutrals.
+Let us write $s,t,n$ for normals and $e,f$ for neutrals. Our judgement forms are
+\[
+  \Gamma \vdash \tau \ni t \qquad \Gamma \vdash e\in\sigma
+\]
+We have stolen the set theoretic $\in$ symbol and exploited its lack of
+symmetry! When we \emph{check} a type, we write the type \emph{before} the
+term, because it is given in advance. Here are the checking rules.
+\[
+  \Rule{\Gamma,x:\sigma \vdash \tau \ni t}
+  {\Gamma\vdash \sigma\to\tau \ni \lambda x\to t}
+  \qquad
+  \Axiom{\Nat\ni n}
+  \qquad
+  \Rule{\Gamma\vdash e\in\sigma\quad \sigma = \tau}
+       {\Gamma\vdash \tau \ni e}
+  \]
+The third rule says that if we are checking a type $\tau$ for a neutral,
+first synthesize the type $\sigma$ of the neutral, then test if the type you
+get is the type you want. But note also the first rule, in which the type
+at which we check a $\lambda$ tells us what type to give for its bound
+variable in the context.
+
+Ultimately, the synthesis rules work on the basis that variables types are indeed
+known by the context.
+\[\begin{array}{c}
+  \Axiom{\Gamma_0,x:\sigma,\Gamma_1\vdash x\in\sigma} \qquad
+  \Rule{\Gamma\vdash f\in \sigma\to\tau \quad \Gamma\vdash \sigma\ni s}
+    {\Gamma\vdash f\:s\in \tau}
+    \\
+  \Rule{\Gamma\vdash e\in\Nat\quad \Gamma\vdash \Nat\ni t}
+  {\Gamma\vdash (e + t) \in \Nat} \qquad
+  \Rule{\Gamma\vdash e\in\Nat}
+    {\Gamma\vdash (n+e)\in\Nat}
+\end{array}  \]
+
+See that in the application rule, $\sigma$ comes from the type of the
+function and is then used to check the argument.
+
+So, we have no need of any magic when our terms are in normal form. If we
+restrict ourselves to programs that we do not want to run, we have no
+problem. So we still have a problem.
+
+What we need type information for is to \emph{justify} doing computation!
+
+
+\section{Type Annotations}
+
+One way to fix the problem by brute force and allow programs which compute
+is to extend the grammar with explicit type annotations, exactly where the
+information is missing.
+\[
+  \NT{neutral} ::= \ldots \;|\; \NT{normal}:\NT{type}
+\]
+We get the rule
+\[
+  \Rule{\Gamma\vdash \tau\ni t}
+    {\Gamma\vdash t:\tau \in \tau}
+\]
+but we have to adjust the small-step semantics to account for the fact that
+computations now have type annotations. Neutral terms may now compute.
+\[
+  (\lambda x\to t : \sigma\to\tau)\;s \leadsto
+  t[s:\sigma/x]:\tau \qquad
+  (n:\Nat + t) \leadsto (n + t:\Nat) \qquad
+  (n + n':\Nat) \leadsto (n + n'):\Nat
+\]
+(In the last reduction rule, the grammar tells you that the $+$ on the right
+cannot be a piece of syntax standing between two numerical values, so it
+indicates that we actually do the arithmetic at that point!)
+
+The only reduction rule for normal terms is
+\[
+  t : \tau \leadsto t
+\]
+which says `a normal form which not being \emph{used} does not need a
+type annotation'.
+
+Everywhere computation happens, we can see the type at which it is happening.
+In particular, the $\beta$ rule does computation at a function type
+$\sigma\to\tau$ which may trigger further computation, but only at
+smaller types, $\sigma$ and $\tau$. Fundamentally, that is why all well
+typed programs in this language terminate.
+
+
+\section{Definitions}
+
+In ordinary programming, we don't just write one great big expression: we
+make definitions, naming components we intend to use later, and we use them
+just by invoking their names.
+
+Another way to avoid the need for magic is to give types when we make
+definitions. Instead of putting annotations directly into neutrals, let us
+consider
+\[
+  \NT{neutral} ::= \ldots \;|\; \mathtt{let}\;x=\NT{normal}:\NT{type}\;\mathtt{in}\; \NT{neutral}
+\]
+with the typing rule
+\[\Rule{\Gamma\vdash \sigma\ni s\quad \Gamma,x:\sigma\vdash e\in\tau}
+       {\Gamma\vdash \mathtt{let}\;x=s:\sigma\;\mathtt{in}\;e\in\tau}
+\]
+Again, we supply just the information that is needed. Programs do not
+contain $\beta$-redexes, but they do contain definitions and defined
+symbols. To \emph{run} a program, turn it into an ordinary LAM
+term by substituting out all the definitions. It will still be well
+typed and not go wrong.
+
+That is to say, giving types for definitions, which is good documentation
+anyway, should always be enough.
+
+
+\section{Oh, All Right, There Is Magic, But It's Just Algebra}
+
+As it happens, for a language as simple as LAM, you can get away with
+writing no types at all. The method we use is straightfoward:
+\begin{enumerate}
+\item Extend the grammar of types with \emph{variables} which stand
+  for types we don't know yet. (Let's write $?\NT{number}$ for such
+  a variable.)
+\item Ensure that we can always invent fresh variables to stand for
+  new things we don't know. (As we're numbering them, we can always
+  remember the lowest number we haven't used yet.)
+\item When we don't know a type, we invent a variable to stand for it.
+\item When we make demands about types, that tells us how to solve
+  for those variables.
+\end{enumerate}
+
+Specifically,
+\begin{itemize}
+\item When inferring a type for $\lambda x\to t$, invent a fresh
+  variable for $x$'s type, put that in the context, and hope to
+  figure it out later.
+\item Every time you have something whose type is a variable $?n$,
+  but you want a $\Nat$ (i.e., in the addition rule), congratulations! You now know that
+  $?n=\Nat$ and can make that substitution.
+\item Every time you have something whose type is a variable $?n$,
+  but you want a function type (i.e., demanding a function in the application rule), congratulations! You can make up
+  two new type variables $?s$ and $?t$ for the unknown source and target
+  types, then solve $?n=?s\to?t$.
+\item Every time that you want two types to be \emph{equal} (i.e., when demanding
+  that a function's argument has the function's source type), solve the
+  equation between the types, and report an error if you cannot.
+\end{itemize}
+
+To solve
+\begin{itemize}
+\item $\Nat = \Nat$ \\ You win!
+\item $\sigma\to\tau = \sigma'\to\tau'$ \\
+  Solve $\sigma = \sigma'$ and $\tau = tau'$.
+\item $\Nat = \sigma'\to\tau'$ or vice versa \\ You lose!
+\item $?n = ?n$ \\ You win! But you don't learn what $?n$ is.
+\item $?n = \tau$ or vice versa, if $\tau\neq?n$ but $?n$ occurs inside $\tau$ \\
+  You lose! (We cannot come up with any type which is a subformula of itself.)
+\item $?n = \tau$ or vice versa, if $?n$ does not occur in $\tau$ \\
+  Substitute $\tau$ for $?n$
+\end{itemize}
+
+The above algorithm is called \emph{first-order unification}. It was published by Alan
+Robinson in 1965. The insight to use it to figure out the missing parts of types was
+due to Robin Milner, in the mid-1970s. It has the property that it makes only those
+solutions that are forced by the constraints we face. As a result, if any type
+variables remain unsolved, it does not matter what type they stand for!
+
+Let us have an example. Infer a type for $\lambda f\to\lambda x\to f\;(f\;x)$.
+We're trying to derive
+\[
+  \Rule{\ldots}
+    {\vdash \lambda f\to\lambda x\to f\;(f\;x) : \ldots}
+\]
+Make up a type for $f$,
+\[
+  \Rule{\Rule{\ldots}{f:\,?0 \vdash \lambda x\to f\;(f\;x) : \ldots}}
+    {\vdash \lambda f\to\lambda x\to f\;(f\;x) : \ldots}
+\]
+Now make up a type for $x$.
+\[
+  \Rule{\Rule{\Rule{\ldots}{f:\,?0,x:\,?1\vdash f\;(f\;x) : \ldots}}
+        {f:\,?0 \vdash \lambda x\to f\;(f\;x) : \ldots}}
+    {\vdash \lambda f\to\lambda x\to f\;(f\;x) : \ldots}
+\]
+Now, the application rule demands a \emph{function} type for the function. The box marks the thing that is not yet what we need.
+\[
+  \Rule{\Rule{\Rule{\Axiom{f:\,?0,x:\,?1\vdash f : \fbx{?0}}\quad\Rule{\ldots}{f:\,?0,x:\,?1\vdash f\;x : \ldots}
+        }{f:\,?0,x:\,?1\vdash f\;(f\;x) : \ldots}}
+        {f:\,?0 \vdash \lambda x\to f\;(f\;x) : \ldots}}
+    {\vdash \lambda f\to\lambda x\to f\;(f\;x) : \ldots}
+\]
+So we make up a function type $?2\to ?3$ and use it to solve $?0$.
+\[
+  \Rule{\Rule{\Rule{\Axiom{f:\,?2\to?3,x:\,?1\vdash f :\, ?2\to?3}\quad\Rule{\ldots}{f:\,?2\to?3,x:\,?1\vdash f\;x : \ldots}
+        }{f:\,?2\to?3,x:\,?1\vdash f\;(f\;x) : \ldots}}
+        {f:\,?2\to?3 \vdash \lambda x\to f\;(f\;x) : \ldots}}
+    {\vdash \lambda f\to\lambda x\to f\;(f\;x) : \ldots}
+\]
+In fact, we can fill in a lot of missing types, now.
+\[
+  \Rule{\Rule{\Rule{\Rule{\Axiom{f:\,?2\to?3,x:\,?1\vdash ?2\to?3}}{f:\,?2\to?3,x:\,?1\vdash f :\, ?2\to?3}\quad\Rule{\ldots}{f:\,?2\to?3,x:\,?1\vdash f\;x :\, ?2}
+        }{f:\,?2\to?3,x:\,?1\vdash f\;(f\;x) :\, ?3}}
+        {f:\,?2\to?3 \vdash \lambda x\to f\;(f\;x) :\, ?1\to?3}}
+    {\vdash \lambda f\to\lambda x\to f\;(f\;x) : (?2\to?3)\to?1\to?3}
+\]
+We know that we want the remaining application to give us a $?2$, but what have we got?
+\[
+  \Rule{\Rule{\Rule{\Axiom{f:\,?2\to?3,x:\,?1\vdash f :\, ?2\to?3}\quad
+        \Rule{\Axiom{f:\,?2\to?3,x:\,?1\vdash f : \, ?2\to\fbx{?3}}\quad \Axiom{f:\,?2\to?3,x:\,?1\vdash x\,:\fbx{?1}}}{f:\,?2\to?3,x:\,?1\vdash f\;x :\, ?2}
+        }{f:\,?2\to?3,x:\,?1\vdash f\;(f\;x) :\, ?3}}
+        {f:\,?2\to?3 \vdash \lambda x\to f\;(f\;x) :\, ?1\to?3}}
+    {\vdash \lambda f\to\lambda x\to f\;(f\;x) : (?2\to?3)\to?1\to?3}
+\]
+For the $f\;x$ to be well typed, we need $?1=?2$ and for it to fit where we are putting it, we need $?3=?2$, so we can solve $?1$, then $?3$:
+\[
+  \Rule{\Rule{\Rule{\Axiom{f:\,?2\to?2,x:\,?2\vdash f :\, ?2\to?2}\quad
+        \Rule{\Axiom{f:\,?2\to?2,x:\,?2\vdash f:\,?2\to?2}\quad \Axiom{f:\,?2\to?2,x:\,?2\vdash x:\,?2}}{f:\,?2\to?2,x:\,?2\vdash f\;x :\, ?2}
+        }{f:\,?2\to?2,x:\,?2\vdash f\;(f\;x) :\, ?2}}
+        {f:\,?2\to?2 \vdash \lambda x\to f\;(f\;x) :\, ?2\to?2}}
+    {\vdash \lambda f\to\lambda x\to f\;(f\;x) : (?2\to?2)\to?2\to?2}
+\]
+We have no solution for $?2$, but no constraints on it, either. It is whatever you want it to be. That is, the type of the $x$ does not matter, but the $f$ has to be a function that maps that type to itself, so that you can do it twice.
+
+Let's have another example, this time of an error: $\lambda x\to x\;x$. We're trying
+to derive
+\[
+  \Rule{\ldots}
+       {\vdash \lambda x\to x\;x : \ldots}
+\]
+so we make up a variable for the type of $x$.
+\[
+  \Rule{\Rule{\ldots}{x:\,?0\vdash x\;x : \ldots}}
+       {\vdash \lambda x\to x\;x : \ldots}
+\]
+When we deploy the application rule and the variable rule, we learn that $?0$ must be
+a function type, so we make one up and substitute it. We now know that the application gives back $?2$
+\[
+  \Rule{\Rule{\Axiom{x:\,?0\vdash \fbx{?0}} \quad \ldots}{x:\,?0\vdash x\;x : \ldots}}
+       {\vdash \lambda x\to x\;x : \ldots}
+\qquad\qquad
+  \Rule{\Rule{\Axiom{x:\,?1\to?2\vdash x:\,?1\to?2} \quad \ldots}{x:\, ?1\to?2\vdash x\;x : \ldots}}
+  {\vdash \lambda x\to x\;x : \ldots}
+\qquad\qquad
+  \Rule{\Rule{\Axiom{x:\,?1\to?2\vdash x:\,?1\to?2} \quad \ldots}{x:\, ?1\to?2\vdash x\;x :\, ?2}}
+  {\vdash \lambda x\to x\;x :\,(?1\to ?2)\to ?2}
+\]
+The trouble arrives when we check the argument. The variable rule gives us its type.
+\[
+  \Rule{\Rule{\Axiom{x:\,?1\to?2\vdash x:\,?1\to?2} \quad \Axiom{x:\,?1\to?2\vdash x:\,\fbx{?1\to?2}}}{x:\, ?1\to?2\vdash x\;x :\, ?2}}
+  {\vdash \lambda x\to x\;x :\,(?1\to ?2)\to ?2}
+\]
+For a valid use of the application rule, we must solve
+\[
+  ?1\to ?2 \;=\; ?1
+\]
+That is, we need a function type equal to its own source type. That cannot happen, so this term is rejected.
+
+
+\section{What Have We Learned?}
+
+\begin{enumerate}
+\item You do not need to do anything clever to figure out types as long as you are willing to annotate redexes or write types for definitions.
+\item You can figure out missing types by introducing variables to stand for unknown types, then solving the constraints that the rules impose on those variables.
+\item In our LAM language, the constraints can easily be solved by first-order unification.
+\item If in some fancy language, the constraints are just \textsc{too hard} to solve by an algorithm, see 1.
+\end{enumerate}
+
+
+\end{document}
