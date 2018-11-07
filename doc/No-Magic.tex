@@ -210,10 +210,10 @@ To solve
 \begin{itemize}
 \item $\Nat = \Nat$ \\ You win!
 \item $\sigma\to\tau = \sigma'\to\tau'$ \\
-  Solve $\sigma = \sigma'$ and $\tau = tau'$.
+  Solve $\sigma = \sigma'$ and $\tau = \tau'$.
 \item $\Nat = \sigma'\to\tau'$ or vice versa \\ You lose!
 \item $?n = ?n$ \\ You win! But you don't learn what $?n$ is.
-\item $?n = \tau$ or vice versa, if $\tau\neq?n$ but $?n$ occurs inside $\tau$ \\
+\item $?n = \tau$ or vice versa, if variable $?n$ occurs strictly inside type $\tau$ \\
   You lose! (We cannot come up with any type which is a subformula of itself.)
 \item $?n = \tau$ or vice versa, if $?n$ does not occur in $\tau$ \\
   Substitute $\tau$ for $?n$
