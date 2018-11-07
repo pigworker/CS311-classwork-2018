@@ -258,7 +258,7 @@ So we make up a function type $?2\to ?3$ and use it to solve $?0$.
 \]
 In fact, we can fill in a lot of missing types, now.
 \[
-  \Rule{\Rule{\Rule{\Rule{\Axiom{f:\,?2\to?3,x:\,?1\vdash ?2\to?3}}{f:\,?2\to?3,x:\,?1\vdash f :\, ?2\to?3}\quad\Rule{\ldots}{f:\,?2\to?3,x:\,?1\vdash f\;x :\, ?2}
+  \Rule{\Rule{\Rule{\Axiom{f:\,?2\to?3,x:\,?1\vdash f :\, ?2\to?3}\quad\Rule{\ldots}{f:\,?2\to?3,x:\,?1\vdash f\;x :\, ?2}
         }{f:\,?2\to?3,x:\,?1\vdash f\;(f\;x) :\, ?3}}
         {f:\,?2\to?3 \vdash \lambda x\to f\;(f\;x) :\, ?1\to?3}}
     {\vdash \lambda f\to\lambda x\to f\;(f\;x) : (?2\to?3)\to?1\to?3}
