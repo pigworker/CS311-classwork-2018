@@ -428,7 +428,7 @@ We need to extend the language of \emph{places} to allow us array lookup
   \NT{place} ::= \ldots \;|\; \NT{place}[\NT{exp}]
 \]
 and add a typing rule
-\[\Rule{\JPl\Gamma p{\arr{\tau}}\quad \JPl\Gamma e\intg}
+\[\Rule{\JPl\Gamma p{\arr{\tau}}\quad \JEx\Gamma e\intg}
        {\JPl\Gamma{p[e]}\tau}
 \]
 
